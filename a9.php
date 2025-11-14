@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>CPS510 Database - Patient List</title>
-    <!-- Simple styling for the table -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -48,22 +47,18 @@
     <h1>Patient Database Records</h1>
 
     <?php
-    // 1. Include the credentials
     require_once 'a9connect.php';
     
-    // 2. Define connection string
+
     $db_conn_str = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=oracle.scs.ryerson.ca)(Port=1521))(CONNECT_DATA=(SID=orcl)))';
 
-    // 3. Connect to the database
     $conn = oci_connect($username, $password, $db_conn_str);
 
     if (!$conn) {
-        // Handle connection error
         $e = oci_error();
         echo "<p class='error'>Database Connection Failed: " . htmlentities($e['message']) . "</p>";
 
     } else {
-        // 4. Connection was successful, run the query
         echo "<p class='success'>Successfully connected to the Oracle database!</p>";
 
         $sql = "SELECT OhipID, FirstName, LastName, Sex, Email, Phone FROM Patient ORDER BY LastName";
@@ -78,7 +73,6 @@
                 $e = oci_error($stid);
                 echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
             } else {
-                // 5. Fetch and display results
                 echo "<h2>Patient List</h2>";
                 echo "<table>";
                 echo "<tr>
@@ -103,7 +97,6 @@
                 echo "</table>";
             }
         }
-        // 6. Close the connection
         oci_close($conn);
     }
     ?>
