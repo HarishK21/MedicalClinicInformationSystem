@@ -40,7 +40,39 @@
             color: green;
             font-weight: bold;
         }
+
+        .navbar {
+            background: linear-gradient(90deg, #0077b6, #0096c7);
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            transition: 0.25s ease-in-out;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .navbar a:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .navbar a.active {
+            background-color: rgba(255, 255, 255, 0.35);
+        }
     </style>
+    
 </head>
 <body>
 
