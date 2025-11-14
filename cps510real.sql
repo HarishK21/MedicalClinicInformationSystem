@@ -248,7 +248,7 @@ FROM  Patient p, Staff s, Prescription m
 WHERE p.OhipID = m.OhipID AND s.StaffID = m.StaffID AND s.Role <> 'Doctor'
 ORDER BY p.OhipID;
 
-SELECT VIEW CancelledAppointments AS (SELECT p.FirstName, p.LastName, COUNT(a.AppointmentID) AS Cancellations
+SELECT VIEW CancelledAppointments AS(SELECT p.FirstName, p.LastName, COUNT(a.AppointmentID) AS Cancellations
 FROM Patient p, Appointment a
 WHERE p.OhipID = a.OhipID AND a.Status = 'Cancelled'
 GROUP BY p.OhipID, p.FirstName, p.LastName);
