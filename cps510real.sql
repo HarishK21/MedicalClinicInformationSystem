@@ -243,3 +243,4 @@ VALUES (6007, 1007, 'None', 'Hypertension', 'None', 'Flu Shot', 'Lisinopril', 'H
 INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
 VALUES (6008, 1008, 'Gluten', 'Anemia', 'None', 'Tetanus', 'Iron supplements', 'Anemia (sister)');
 
+--fix
