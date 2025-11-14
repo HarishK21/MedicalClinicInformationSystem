@@ -80,7 +80,7 @@ CREATE TABLE MedicalRecord (
 
 -- Insert Patients
 INSERT INTO Patient (OhipID, FirstName, LastName, DateOfBirth, Sex, Height, Weight, Email, Phone, Address)
-VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 130, 'mil.jev@gmail.com', '647-880-4910', '123 Main St');
+VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 35, 'mil.jev@gmail.com', '647-880-4910', '123 Main St');
 
 INSERT INTO Patient (OhipID, FirstName, LastName, DateOfBirth, Sex, Height, Weight, Email, Phone, Address)
 VALUES (1002, 'Umair', 'Alam', DATE '2005-06-01', 'Male', 165, 60, 'umair.alam@gmail.com', '905-624-4591', '456 Niagara Ave');
@@ -221,8 +221,6 @@ VALUES (5008, 1008, 2004, DATE '2025-10-02', 'Cancelled', 'Routine Exam', NULL);
 INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
 VALUES (6001, 1001, 'Peanuts', 'Hypertension', 'Appendectomy (2015)', 'Tetanus, COVID-19', 'Lisinopril', 'Heart disease (father)');
 
-
-
 INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
 VALUES (6002, 1002, 'Eggs, Dust', 'Asthma', 'None', 'Flu Shot, COVID-19', 'Albuterol', 'Asthma (mother)');
 
@@ -242,15 +240,6 @@ VALUES (6006, 1006, 'Dust', 'Back Pain', 'None', 'COVID-19', 'Ibuprofen', 'None'
 INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
 VALUES (6007, 1007, 'None', 'Hypertension', 'None', 'Flu Shot', 'Lisinopril', 'Hypertension (mother)');
 
-SELECT p.OhipID, p.FirstName AS PatientFirstName, p.LastName AS PatientLastName, s.FirstName AS StaffFirstName, s.LastName AS StaffLastName,
-s.Role, m.Medication, M.Dose, m.DateIssued
-FROM  Patient p, Staff s, Prescription m
-WHERE p.OhipID = m.OhipID AND s.StaffID = m.StaffID AND s.Role <> 'Doctor'
-ORDER BY p.OhipID;
-
-SELECT VIEW CancelledAppointments AS (SELECT p.FirstName, p.LastName, COUNT(a.AppointmentID) AS Cancellations
-FROM Patient p, Appointment a
-WHERE p.OhipID = a.OhipID AND a.Status = 'Cancelled'
-GROUP BY p.OhipID, p.FirstName, p.LastName);
-
+INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
+VALUES (6008, 1008, 'Gluten', 'Anemia', 'None', 'Tetanus', 'Iron supplements', 'Anemia (sister)');
 
