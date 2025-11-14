@@ -77,7 +77,6 @@ CREATE TABLE MedicalRecord (
     FamilyHistory VARCHAR(200),
     FOREIGN KEY (OhipID) REFERENCES Patient(OhipID)
 );
-
 -- Insert Patients
 INSERT INTO Patient (OhipID, FirstName, LastName, DateOfBirth, Sex, Height, Weight, Email, Phone, Address)
 VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 35, 'mil.jev@gmail.com', '647-880-4910', '123 Main St');
@@ -243,4 +242,4 @@ VALUES (6007, 1007, 'None', 'Hypertension', 'None', 'Flu Shot', 'Lisinopril', 'H
 INSERT INTO MedicalRecord (recordID, OhipID, Allergies, Diagnosis, Procedures, Vaccinations, PastMedication, FamilyHistory)
 VALUES (6008, 1008, 'Gluten', 'Anemia', 'None', 'Tetanus', 'Iron supplements', 'Anemia (sister)');
 
---fix
+COMMIT;
