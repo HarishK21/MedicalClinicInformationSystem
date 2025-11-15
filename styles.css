@@ -105,7 +105,7 @@ th, td {
 
 th {
     background-color: #004c9b;
-    color: white;
+    color: white; /* Added this to make text readable */
 }
 
 tr:nth-child(even) {
@@ -215,3 +215,48 @@ tr:hover {
 .layout .page-container {
     flex: 1;
 }
+
+/* --- ADDED MISSING STYLES --- */
+
+/* Form styles for Add/Edit */
+.crud-form div {
+    margin-bottom: 10px;
+}
+.crud-form label {
+    display: inline-block;
+    width: 120px;
+}
+.crud-form input, .crud-form select {
+    padding: 5px;
+    width: 250px;
+}
+.form-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+.form-actions .sidebar-btn {
+    width: auto; /* Fixes button width */
+}
+
+/* Action link styles in table */
+.action-link {
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Red underline delete button in table */
+.action-link-danger {
+    background: none;
+    border: none;
+    color: #dc3545;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
