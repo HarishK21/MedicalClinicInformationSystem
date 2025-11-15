@@ -150,20 +150,18 @@ tr:hover {
     opacity: 0.85;
 }
 
-/* Layout with sidebar */
 .layout {
     display: flex;
     align-items: flex-start;
 }
 
-/* Sidebar styles */
 .sidebar {
     width: 230px;
     padding: 18px 16px;
     background-color: #ffffff;
     border-right: 1px solid #ddd;
     box-shadow: 2px 0 6px rgba(0,0,0,0.06);
-    min-height: calc(100vh - 80px); /* below header */
+    min-height: calc(100vh - 80px); 
 }
 
 .sidebar h2 {
