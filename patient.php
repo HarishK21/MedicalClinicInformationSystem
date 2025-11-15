@@ -1,109 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>CPS510 Database - Patient List</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            width: 80%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #004c9b;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-        }
-        .success {
-            color: green;
-            font-weight: bold;
-        }
+<?php include 'header.php'; ?>
 
-        .navbar {
-            background: linear-gradient(90deg, #0077b6, #0096c7);
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            display: flex;
-            gap: 25px;
-            align-items: center;
-        }
-
-        .navbar a {
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-            transition: 0.25s ease-in-out;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        .navbar a:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .navbar a.active {
-            background-color: rgba(255, 255, 255, 0.35);
-        }
-    </style>
-    
-</head>
-<body>
-
+<div class="page-container">
     <h1>Patient Database Records</h1>
 
-    <div class="navbar">
-        <a href="patient.php">Patients</a>
-        <a href="staff.php">Staff</a>
-        <a href="prescriptions.php">Prescriptions</a>
-        <a href="billing.php">Billing</a>
-        <a href="appointments.php">Appointments</a>
-        <a href="medical_records.php">Medical Records</a>
-    </div>
-
-<?php
-    // 1. Include the credentials
+    <?php
     require_once 'a9connect.php';
-    
-    // 2. Define connection string
     $db_conn_str = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=oracle.scs.ryerson.ca)(Port=1521))(CONNECT_DATA=(SID=orcl)))';
-
-    // 3. Connect to the database
     $conn = oci_connect($username, $password, $db_conn_str);
 
     if (!$conn) {
-        // Handle connection error
         $e = oci_error();
         echo "<p class='error'>Database Connection Failed: " . htmlentities($e['message']) . "</p>";
 
     } else {
-        // 4. Connection was successful, run the query
         echo "<p class='success'>Successfully connected to the Oracle database!</p>";
 
         $sql = "SELECT OhipID, FirstName, LastName, Sex, Email, Phone FROM Patient ORDER BY LastName";
@@ -118,35 +27,40 @@
                 $e = oci_error($stid);
                 echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
             } else {
-                // 5. Fetch and display results
                 echo "<h2>Patient List</h2>";
                 echo "<table>";
                 echo "<tr>
-                        <th>OHIP ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Sex</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                      </tr>";
+                    <th>OHIP ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Sex</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>";
 
-                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['SEX']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
-                    echo "</tr>";
-                }
-                echo "</table>";
+            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                echo "<tr>";
+                echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['SEX']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
+                echo "<td>
+                        <a href='patient_edit.php?id=" . urlencode($row['OHIPID']) . "' class='btn edit'>Modify</a>
+                        <a href='patient_delete.php?id=" . urlencode($row['OHIPID']) . "' class='btn delete'>Delete</a>
+                    </td>";
+
+                echo "</tr>";
+            }
+            echo "</table>";
             }
         }
-        // 6. Close the connection
         oci_close($conn);
     }
     ?>
+</div>
 
 </body>
 </html>
