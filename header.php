@@ -10,7 +10,6 @@
     <div class="topbar">
         <div class="brand">
             <span class="brand-title">Medical Clinic Information System</span>
-            <span class="brand-subtitle">CPS510 · Oracle 11g · PHP Web UI</span>
         </div>
 
         <nav class="navbar">
