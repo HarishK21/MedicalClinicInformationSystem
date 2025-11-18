@@ -70,50 +70,84 @@
                 if (isset($_POST['table_action'])) {
                     $action = $_POST['table_action'];
                     if ($action === 'drop_patient') {
-                        $sql = "BEGIN EXECUTE IMMEDIATE 'DROP TABLE Patient CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
-                        $err = runStatement($conn, $sql);
-                        if ($err) $adminMessage = "<p class='error'>Error dropping table: " . htmlentities($err['message']) . "</p>";
-                        else $adminMessage = "<p class='success'>Patient table dropped.</p>";
+        $dropPatient = "BEGIN EXECUTE IMMEDIATE 'DROP TABLE Patient CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
+        $dropStaff   = "BEGIN EXECUTE IMMEDIATE 'DROP TABLE Staff CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
 
-                    } elseif ($action === 'create_patient') {
-                        $sql = "CREATE TABLE Patient (
-                                OhipID INT PRIMARY KEY,
-                                FirstName VARCHAR(100) NOT NULL,
-                                LastName VARCHAR(100) NOT NULL,
-                                DateOfBirth DATE NOT NULL,
-                                Sex VARCHAR(10) CHECK (Sex IN ('Male', 'Female')) NOT NULL,
-                                Height INT CHECK (Height > 0),
-                                Weight INT CHECK (Weight > 0),
-                                Email VARCHAR(100),
-                                Phone VARCHAR(14),
-                                Address VARCHAR(100)
-                            )";
-                        $err = runStatement($conn, $sql);
-                        if ($err) $adminMessage = "<p class='error'>Error creating table: " . htmlentities($err['message']) . "</p>";
-                        else $adminMessage = "<p class='success'>Patient table created.</p>";
+        $err1 = runStatement($conn, $dropPatient);
+        $err2 = runStatement($conn, $dropStaff);
 
-                    } elseif ($action === 'populate_patient') {
-                        $inserts = [
-                            "INSERT INTO Patient VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 35, 'mil.jev@gmail.com', '647-880-4910', '123 Main St')",
-                            "INSERT INTO Patient VALUES (1002, 'Umair', 'Alam', DATE '2005-06-01', 'Male', 165, 60, 'umair.alam@gmail.com', '905-624-4591', '456 Niagara Ave')",
-                            "INSERT INTO Patient VALUES (1003, 'Harish', 'Kiritharan', DATE '2005-08-21', 'Male', 175, 72, 'h.kiritha@gmail.com', '416-555-9999', '789 Pine Rd')",
-                            "INSERT INTO Patient VALUES (1004, 'Bob', 'Singh', DATE '1992-03-12', 'Female', 170, 65, 'bobSingh89@gmail.com', '416-555-1212', '12 Elm St')",
-                            "INSERT INTO Patient VALUES (1005, 'David', 'Wilson', DATE '1978-11-30', 'Male', 182, 90, 'david.wilson@gmail.com', '416-555-3434', '98 King St')",
-                            "INSERT INTO Patient VALUES (1006, 'Bob', 'Singh', DATE '2001-07-08', 'Female', 160, 55, 'Bsingh11@gmail.com', '416-555-5656', '22 River Rd')",
-                            "INSERT INTO Patient VALUES (1007, 'Akshar', 'Patel', DATE '1995-09-02', 'Male', 178, 77, 'akshar.patel@gmail.com', '416-555-7878', '45 Maple Ave')",
-                            "INSERT INTO Patient VALUES (1008, 'David', 'Wilson', DATE '2003-12-18', 'Female', 168, 62, 'david.wilson@gmail.com', '416-555-9090', '67 Birch Ln')"
-                        ];
-                        $hadError = false;
-                        foreach ($inserts as $sql) {
-                            $err = runStatement($conn, $sql);
-                            if ($err && strpos($err['message'], 'ORA-00001') === false) {
-                                $adminMessage = "<p class='error'>Error populating table: " . htmlentities($err['message']) . "</p>";
-                                $hadError = true;
-                                break;
-                            }
-                        }
-                        if (!$hadError) $adminMessage = "<p class='success'>Patient table populated (duplicates skipped).</p>";
-                    }
+        if ($err1 || $err2)
+            $adminMessage = "<p class='error'>Error dropping tables.</p>";
+        else
+            $adminMessage = "<p class='success'>Patient and Staff tables dropped.</p>";
+
+    } elseif ($action === 'create_patient') {
+        $createPatient = "CREATE TABLE Patient (
+            OhipID INT PRIMARY KEY,
+            FirstName VARCHAR(100) NOT NULL,
+            LastName VARCHAR(100) NOT NULL,
+            DateOfBirth DATE NOT NULL,
+            Sex VARCHAR(10) CHECK (Sex IN ('Male', 'Female')) NOT NULL,
+            Height INT CHECK (Height > 0),
+            Weight INT CHECK (Weight > 0),
+            Email VARCHAR(100),
+            Phone VARCHAR(14),
+            Address VARCHAR(100)
+        )";
+
+        $createStaff = "CREATE TABLE Staff (
+            StaffID INT PRIMARY KEY,
+            FirstName VARCHAR(100) NOT NULL,
+            LastName VARCHAR(100) NOT NULL,
+            Role VARCHAR(100) NOT NULL,
+            Email VARCHAR(100),
+            Phone VARCHAR(14),
+            Address VARCHAR(100),
+            EmploymentStatus VARCHAR(7) DEFAULT 'Active' CHECK (EmploymentStatus IN ('Absence', 'Active', 'Retired')),
+            Salary INT CHECK (Salary >= 0)
+        )";
+
+        $err1 = runStatement($conn, $createPatient);
+        $err2 = runStatement($conn, $createStaff);
+
+        if ($err1 || $err2)
+            $adminMessage = "<p class='error'>Error creating tables.</p>";
+        else
+            $adminMessage = "<p class='success'>Patient and Staff tables created (empty).</p>";
+
+    } elseif ($action === 'populate_patient') {
+        $inserts = [
+            "INSERT INTO Patient VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 35, 'mil.jev@gmail.com', '647-880-4910', '123 Main St')",
+            "INSERT INTO Patient VALUES (1002, 'Umair', 'Alam', DATE '2005-06-01', 'Male', 165, 60, 'umair.alam@gmail.com', '905-624-4591', '456 Niagara Ave')",
+            "INSERT INTO Patient VALUES (1003, 'Harish', 'Kiritharan', DATE '2005-08-21', 'Male', 175, 72, 'h.kiritha@gmail.com', '416-555-9999', '789 Pine Rd')",
+            "INSERT INTO Patient VALUES (1004, 'Bob', 'Singh', DATE '1992-03-12', 'Female', 170, 65, 'bobSingh89@gmail.com', '416-555-1212', '12 Elm St')",
+            "INSERT INTO Patient VALUES (1005, 'David', 'Wilson', DATE '1978-11-30', 'Male', 182, 90, 'david.wilson@gmail.com', '416-555-3434', '98 King St')",
+            "INSERT INTO Patient VALUES (1006, 'Bob', 'Singh', DATE '2001-07-08', 'Female', 160, 55, 'Bsingh11@gmail.com', '416-555-5656', '22 River Rd')",
+            "INSERT INTO Patient VALUES (1007, 'Akshar', 'Patel', DATE '1995-09-02', 'Male', 178, 77, 'akshar.patel@gmail.com', '416-555-7878', '45 Maple Ave')",
+            "INSERT INTO Patient VALUES (1008, 'David’', 'Wilson', DATE '2003-12-18', 'Female', 168, 62, 'david.wilson@gmail.com', '416-555-9090', '67 Birch Ln')",
+            
+            "INSERT INTO Staff VALUES (2001, 'Emily', 'Johnson', 'Doctor', 'emily.johnson@gmail.com', '416-555-2222', '12 Clinic Blvd', 'Active', 120000)",
+            "INSERT INTO Staff VALUES (2002, 'Michael', 'Brown', 'Nurse', 'michael.brown@gmail.com', '416-555-3333', '34 Wellness St', 'Active', 65000)",
+            "INSERT INTO Staff VALUES (2003, 'Sarah', 'Lee', 'Doctor', 'sarah.lee@gmail.com', '416-555-4444', '56 Health Dr', 'Retired', 150000)",
+            "INSERT INTO Staff VALUES (2004, 'James', 'Taylor', 'Doctor', 'james.taylor@gmail.com', '416-555-1111', '78 Clinic Rd', 'Active', 115000)",
+            "INSERT INTO Staff VALUES (2005, 'Anna', 'White', 'Nurse', 'anna.white@gmail.com', '416-555-2223', '90 Wellness Blvd', 'Active', 67000)",
+            "INSERT INTO Staff VALUES (2006, 'Robert', 'Green', 'Receptionist', 'robert.green@gmail.com', '416-555-3334', '33 Care St', 'Active', 55000)",
+            "INSERT INTO Staff VALUES (2007, 'Isabella', 'King', 'Medical Student', 'isabella.king@gmail.com', '416-555-4445', '44 Med Dr', 'Active', 145000)",
+        ];
+
+        $hadError = false;
+        foreach ($inserts as $sql) {
+            $err = runStatement($conn, $sql);
+            if ($err && strpos($err['message'], 'ORA-00001') === false) {
+                $adminMessage = "<p class='error'>Error populating tables: " . htmlentities($err['message']) . "</p>";
+                $hadError = true;
+                break;
+            }
+        }
+
+        if (!$hadError)
+            $adminMessage = "<p class='success'>Patient and Staff tables populated successfully (duplicates skipped).</p>";
+    }
                 }
 
                 if (isset($_POST['record_action'])) {
@@ -271,8 +305,7 @@
                                     <th>Address</th>
                                     <th>Actions</th>
                                   </tr>";
-
-                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                             while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                                 $dob_formatted = date('Y-m-d', strtotime($row['DATEOFBIRTH']));
                                 echo "<tr>";
                                 echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
@@ -292,6 +325,50 @@
                                 echo '<form method="post" action="patient.php" onsubmit="return confirm(\'Are you sure you want to delete this patient?\');" style="display:inline;">
                                         <input type="hidden" name="record_action" value="delete_patient">
                                         <input type="hidden" name="ohip_id" value="' . $row['OHIPID'] . '">
+                                        <button type="submit" class="action-link-danger">Delete</button>
+                                      </form>';
+                                echo "</td>";
+
+                                echo "</tr>";
+                            }
+                            echo "</table>";
+
+                            echo "<h2>Staff List</h2>";
+                            $sql_staff = "SELECT * FROM Staff ORDER BY LastName"; 
+                            $stid_staff = oci_parse($conn, $sql_staff);
+                            oci_execute($stid_staff);
+                            echo "<table>";
+                            echo "<tr>
+                                    <th>Staff ID</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Role</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>Employment Status</th>
+                                    <th>Salary</th>
+                                    <th>Actions</th>
+                                  </tr>";
+
+                            while ($row = oci_fetch_array($stid_staff, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['EMPLOYMENTSTATUS']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['SALARY']) . "</td>";
+                                
+                                echo "<td>";
+                                echo '<a href="patient.php?view=edit&id=' . $row['STAFFID'] . '" class="action-link">Edit</a> ';
+                                
+                                echo '<form method="post" action="patient.php" onsubmit="return confirm(\'Are you sure you want to delete this patient?\');" style="display:inline;">
+                                        <input type="hidden" name="record_action" value="delete_patient">
+                                        <input type="hidden" name="staff_id" value="' . $row['STAFFID'] . '">
                                         <button type="submit" class="action-link-danger">Delete</button>
                                       </form>';
                                 echo "</td>";
