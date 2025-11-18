@@ -253,3 +253,7 @@ tr:hover {
     font-size: inherit;
 }
 
+.sidebar-btn.query {
+    background-color: #6c63ff; 
+    color: #fff;
+}
