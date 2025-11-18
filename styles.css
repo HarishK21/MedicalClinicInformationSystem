@@ -216,9 +216,6 @@ tr:hover {
     flex: 1;
 }
 
-/* --- ADDED MISSING STYLES --- */
-
-/* Form styles for Add/Edit */
 .crud-form div {
     margin-bottom: 10px;
 }
@@ -238,17 +235,15 @@ tr:hover {
     align-items: flex-start;
 }
 .form-actions .sidebar-btn {
-    width: auto; /* Fixes button width */
+    width: auto;
 }
 
-/* Action link styles in table */
 .action-link {
     color: #007bff;
     text-decoration: underline;
     cursor: pointer;
 }
 
-/* Red underline delete button in table */
 .action-link-danger {
     background: none;
     border: none;
