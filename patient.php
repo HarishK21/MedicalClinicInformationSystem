@@ -19,21 +19,35 @@
             <input type="hidden" name="table_action" value="drop_patient">
             <button type="submit" class="sidebar-btn danger"
                 onclick="return confirm('Are you sure you want to DROP the Patient table? This cannot be undone.');">
-                Drop Patient Table
+                Drop Tables
             </button>
         </form>
 
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="create_patient">
             <button type="submit" class="sidebar-btn primary">
-                Create Patient Table
+                Create Tables
             </button>
         </form>
 
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="populate_patient">
             <button type="submit" class="sidebar-btn neutral">
-                Populate Patient Table
+                Populate Tables
+            </button>
+        </form>
+
+        <form method="get" action="patient.php">
+            <input type="hidden" name="view" value="patient_fullnames">
+            <button type="submit" class="sidebar-btn query">
+                Patient Full Names
+            </button>
+        </form>
+
+        <form method="get" action="patient.php">
+            <input type="hidden" name="view" value="staff_roles">
+            <button type="submit" class="sidebar-btn query">
+                Active Staff by Role
             </button>
         </form>
     </aside>
@@ -109,6 +123,7 @@
 
                 if (isset($_POST['table_action'])) {
                     $action = $_POST['table_action'];
+
                     if ($action === 'drop_patient') {
     
         runSQL($conn,'drop.sql');
@@ -126,12 +141,14 @@
                     $action = $_POST['record_action'];
 
                     if ($action === 'delete_patient') {
-                        $ohip_id = $_POST['ohip_id'];
-                        $sql = "DELETE FROM Patient WHERE OhipID = $ohip_id";
-                        $err = runStatement($conn, $sql);
-                        if ($err) $adminMessage = "<p class='error'>Error deleting patient: " . htmlentities($err['message']) . "</p>";
-                        else $adminMessage = "<p class='success'>Patient (OHIP ID: $ohip_id) deleted successfully.</p>";
-                    
+                        $ohip_id = $_POST['ohip_id'] ?? null;
+                        if ($ohip_id !== null) {
+                            $sql = "DELETE FROM Patient WHERE OhipID = $ohip_id";
+                            $err = runStatement($conn, $sql);
+                            if ($err) $adminMessage = "<p class='error'>Error deleting patient: " . htmlentities($err['message']) . "</p>";
+                            else $adminMessage = "<p class='success'>Patient (OHIP ID: $ohip_id) deleted successfully.</p>";
+                        }
+
                     } elseif ($action === 'add_patient') {
                         $sql = "INSERT INTO Patient (OhipID, FirstName, LastName, DateOfBirth, Sex, Height, Weight, Email, Phone, Address) VALUES (
                             " . $_POST['ohip_id'] . ",
@@ -161,7 +178,7 @@
                             Phone = '" . $_POST['phone'] . "',
                             Address = '" . $_POST['address'] . "'
                         WHERE OhipID = " . $_POST['ohip_id'];
-                        
+
                         $err = runStatement($conn, $sql);
                         if ($err) $adminMessage = "<p class='error'>Error updating patient: " . htmlentities($err['message']) . "</p>";
                         else $adminMessage = "<p class='success'>Patient (OHIP ID: " . $_POST['ohip_id'] . ") updated successfully.</p>";
@@ -246,6 +263,79 @@
                     }
                     break;
 
+                case 'patient_fullnames':
+                    echo "<h2>Patients Grouped by Full Name</h2>";
+
+                    $sql = "SELECT FirstName, LastName, COUNT(*) AS FullNames
+                            FROM Patient
+                            GROUP BY LastName, FirstName
+                            ORDER BY FullNames DESC, LastName, FirstName";
+                    $stid = oci_parse($conn, $sql);
+
+                    if (!$stid) {
+                        $e = oci_error($conn);
+                        echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
+                    } else {
+                        $r = oci_execute($stid);
+                        if (!$r) {
+                            $e = oci_error($stid);
+                            echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                        } else {
+                            echo "<table>";
+                            echo "<tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Number of Patients</th>
+                                  </tr>";
+
+                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['FULLNAMES']) . "</td>";
+                                echo "</tr>";
+                            }
+                            echo "</table>";
+                        }
+                    }
+                    break;
+
+                case 'staff_roles':
+                    echo "<h2>Active Staff Members by Role</h2>";
+
+                    $sql = "SELECT Role, COUNT(*) AS StaffCount
+                            FROM Staff
+                            WHERE EmploymentStatus = 'Active'
+                            GROUP BY Role
+                            ORDER BY StaffCount DESC";
+                    $stid = oci_parse($conn, $sql);
+
+                    if (!$stid) {
+                        $e = oci_error($conn);
+                        echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
+                    } else {
+                        $r = oci_execute($stid);
+                        if (!$r) {
+                            $e = oci_error($stid);
+                            echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                        } else {
+                            echo "<table>";
+                            echo "<tr>
+                                    <th>Role</th>
+                                    <th>Active Staff Count</th>
+                                  </tr>";
+
+                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['STAFFCOUNT']) . "</td>";
+                                echo "</tr>";
+                            }
+                            echo "</table>";
+                        }
+                    }
+                    break;
+
                 case 'list':
                 default:
                     echo "<p class='success'>Successfully connected to the Oracle database!</p>";
@@ -277,7 +367,7 @@
                                     <th>Address</th>
                                     <th>Actions</th>
                                   </tr>";
-                             while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                                 $dob_formatted = date('Y-m-d', strtotime($row['DATEOFBIRTH']));
                                 echo "<tr>";
                                 echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
@@ -320,7 +410,6 @@
                                     <th>Address</th>
                                     <th>Employment Status</th>
                                     <th>Salary</th>
-                                    <th>Actions</th>
                                   </tr>";
 
                             while ($row = oci_fetch_array($stid_staff, OCI_ASSOC + OCI_RETURN_NULLS)) {
@@ -334,17 +423,6 @@
                                 echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['EMPLOYMENTSTATUS']) . "</td>";
                                 echo "<td>" . htmlspecialchars($row['SALARY']) . "</td>";
-                                
-                                echo "<td>";
-                                echo '<a href="patient.php?view=edit&id=' . $row['STAFFID'] . '" class="action-link">Edit</a> ';
-                                
-                                echo '<form method="post" action="patient.php" onsubmit="return confirm(\'Are you sure you want to delete this patient?\');" style="display:inline;">
-                                        <input type="hidden" name="record_action" value="delete_patient">
-                                        <input type="hidden" name="staff_id" value="' . $row['STAFFID'] . '">
-                                        <button type="submit" class="action-link-danger">Delete</button>
-                                      </form>';
-                                echo "</td>";
-
                                 echo "</tr>";
                             }
                             echo "</table>";
