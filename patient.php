@@ -189,6 +189,13 @@
             echo "<p class='success'>Successfully connected to the Oracle database!</p>";
 
             // ---------- PATIENT TABLE (READ ONLY) ----------
+            echo '<div class="table-header">
+                    <h2>Patient List</h2>
+                    <a href="add.php?table=patient" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
             $sql = "SELECT * FROM Patient ORDER BY LastName";
             $stid = oci_parse($conn, $sql);
 
@@ -196,18 +203,16 @@
                 $e = oci_error($conn);
                 echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
             } else {
-                $r = oci_execute($stid);
+                $r = @oci_execute($stid);
                 if (!$r) {
                     $e = oci_error($stid);
-                    echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        // table does not exist
+                        echo "<p class='warning'>Patient table does not exist. Use 'Create Tables' in the sidebar.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
                 } else {
-                    echo '<div class="table-header">
-                            <h2>Patient List</h2>
-                            <a href="add.php?table=patient" class="sidebar-btn primary" style="width:auto;">
-                                Add Record
-                            </a>
-                          </div>';
-
                     echo "<table>";
                     echo "<tr>
                             <th>OHIP ID</th>
@@ -250,36 +255,46 @@
 
             $sql_staff = "SELECT * FROM Staff ORDER BY LastName";
             $stid_staff = oci_parse($conn, $sql_staff);
-            if ($stid_staff && oci_execute($stid_staff)) {
-                echo "<table>";
-                echo "<tr>
-                        <th>Staff ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Role</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>Employment Status</th>
-                        <th>Salary</th>
-                      </tr>";
+            if ($stid_staff) {
+                $r2 = @oci_execute($stid_staff);
+                if ($r2) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Staff ID</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Employment Status</th>
+                            <th>Salary</th>
+                          </tr>";
 
-                while ($row = oci_fetch_array($stid_staff, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['EMPLOYMENTSTATUS']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['SALARY']) . "</td>";
-                    echo "</tr>";
+                    while ($row = oci_fetch_array($stid_staff, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['EMPLOYMENTSTATUS']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['SALARY']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_staff);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>Staff table does not exist. Use 'Create Tables' in the sidebar.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
                 }
-                echo "</table>";
             } else {
-                echo "<p class='error'>Unable to load Staff table.</p>";
+                echo "<p class='error'>Unable to prepare Staff query.</p>";
             }
 
             oci_close($conn);
