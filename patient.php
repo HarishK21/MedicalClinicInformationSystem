@@ -54,9 +54,7 @@
         $db_conn_str = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=oracle.scs.ryerson.ca)(Port=1521))(CONNECT_DATA=(SID=orcl)))';
         $conn = oci_connect($username, $password, $db_conn_str);
 
-        /* ---------- HELPER FUNCTIONS ---------- */
-
-        // Run .sql file with generic statements
+        // Run sql files
         function runSQL($conn, $file) {
             $sql = file_get_contents($file);
             $queries = explode(";", $sql);
@@ -69,7 +67,7 @@
             oci_commit($conn);
         }
 
-        // Run .sql file and convert 'YYYY-MM-DD' to TO_DATE(...)
+        // Run sql file for populate
         function runSQLPopulate($conn, $file) {
             $sql = file_get_contents($file);
             $queries = explode(";", $sql);
@@ -199,7 +197,6 @@
             $row = oci_fetch_assoc($stid);
             return ($row['NUM'] > 0);
         }
-        /* ---------- MAIN LOGIC ---------- */
 
             // Admin sidebar actions
             if (isset($_POST['table_action'])) {
