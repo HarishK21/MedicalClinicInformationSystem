@@ -40,7 +40,7 @@
             <input type="hidden" name="table_action" value="run_queries">
             <button type="submit" class="sidebar-btn query">Run Queries</button>
         </form>
-        <form method="post" action="TBD">
+        <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="exit">
             <button type="submit" class="sidebar-btn danger">Exit</button>
         </form>
@@ -211,6 +211,10 @@
                     oci_close($conn);
                     echo "</div></div></body></html>";
                     exit;
+                } elseif ($act === 'exit') {
+                    oci_close($conn);
+                    echo "<p class='success'>Disconnected from Oracle.</p>";
+                    exit();
                 }
             }
 
