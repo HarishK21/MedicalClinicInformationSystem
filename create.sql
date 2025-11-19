@@ -23,6 +23,12 @@ CREATE TABLE Staff (
     Salary INT CHECK (Salary >= 0)
 );
 
+CREATE TABLE MedicationInfo (
+    Medication VARCHAR(100) PRIMARY KEY,
+    Instructions VARCHAR(100) NOT NULL,
+    SideEffects VARCHAR(255)
+);
+
 CREATE TABLE Prescription (
     PrescriptionID INT PRIMARY KEY,
     OhipID INT NOT NULL,
@@ -32,14 +38,8 @@ CREATE TABLE Prescription (
     Timeframe VARCHAR(100),
     DateIssued DATE NOT NULL,
     MedicationType VARCHAR(100),
-    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID),
-    FOREIGN KEY (StaffID) REFERENCES Staff (StaffID)
-);
-
-CREATE TABLE MedicationInfo (
-    Medication VARCHAR(100) NOT NULL,
-    Instructions VARCHAR(100) NOT NULL,
-    SideEffects VARCHAR(255)
+    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID) ON DELETE CASCADE,
+    FOREIGN KEY (StaffID) REFERENCES Staff (StaffID) ON DELETE CASCADE
 );
 
 CREATE TABLE Billing (
@@ -50,7 +50,7 @@ CREATE TABLE Billing (
     Cost INT CHECK (Cost >= 0) NOT NULL,
     PaymentMethod VARCHAR(100) CHECK (PaymentMethod IN ('Credit', 'Debit', 'Cash', 'OHIP')),
     PaymentDate DATE,
-    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID)
+    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID) ON DELETE CASCADE
 );
 
 CREATE TABLE Appointment (
@@ -61,8 +61,8 @@ CREATE TABLE Appointment (
     Status VARCHAR(100) DEFAULT 'Scheduled' CHECK (Status IN ('Cancelled', 'Scheduled', 'Completed', 'No-Show')) NOT NULL,
     ReasonForVisit VARCHAR(100),
     Result VARCHAR(100),
-    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID),
-    FOREIGN KEY (StaffID) REFERENCES Staff (StaffID)
+    FOREIGN KEY (OhipID) REFERENCES Patient (OhipID) ON DELETE CASCADE,
+    FOREIGN KEY (StaffID) REFERENCES Staff (StaffID) ON DELETE CASCADE
 ); 
 
 CREATE TABLE MedicalRecord (
@@ -72,14 +72,14 @@ CREATE TABLE MedicalRecord (
     Vaccinations VARCHAR(100),
     PastMedication VARCHAR(200),
     FamilyHistory VARCHAR(200),
-    FOREIGN KEY (OhipID) REFERENCES Patient(OhipID)
+    FOREIGN KEY (OhipID) REFERENCES Patient(OhipID) ON DELETE CASCADE
 );
 
 CREATE TABLE Diagnoses (
     DiagnosisID INT PRIMARY KEY,
     OhipID INT NOT NULL,
     Diagnosis VARCHAR(100),
-    FOREIGN KEY (OhipID) REFERENCES Patient(OhipID)
+    FOREIGN KEY (OhipID) REFERENCES Patient(OhipID) ON DELETE CASCADE
 );
 
 COMMIT;

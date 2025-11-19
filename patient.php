@@ -5,53 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Records</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Styling for the new ID-based management forms */
+        .manage-bar {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            border: 1px solid #ddd;
+        }
+        .manage-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .manage-form label { font-weight: bold; font-size: 0.9rem; }
+        .manage-form input[type="text"], 
+        .manage-form input[type="number"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 120px;
+        }
+        .manage-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-edit { background-color: #2196F3; } /* Blue */
+        .btn-del { background-color: #f44336; } /* Red */
+        .btn-edit:hover { background-color: #0b7dda; }
+        .btn-del:hover { background-color: #da190b; }
+    </style>
 </head>
 <body>
 
 <header>
     <div class="topbar">
-        <div class="brand">
-            <span class="brand-title">Medical Clinic Information System</span>
-        </div>
-
-        <nav class="navbar">
-            <a href="patient.php" class="active">Patients</a>
-        </nav>
+        <div class="brand"><span class="brand-title">Medical Clinic Information System</span></div>
+        <nav class="navbar"><a href="patient.php" class="active">Patients</a></nav>
     </div>
 </header>
 
 <div class="layout">
-
     <aside class="sidebar">
         <h2>Admin Actions</h2>
-
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="drop_patient">
-            <button type="submit" class="sidebar-btn danger"
-                onclick="return confirm('Are you sure you want to DROP the tables? This cannot be undone.');">
-                Drop Tables
-            </button>
+            <button type="submit" class="sidebar-btn danger" onclick="return confirm('Are you sure? This cannot be undone.');">Drop Tables</button>
         </form>
-
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="create_patient">
-            <button type="submit" class="sidebar-btn primary">
-                Create Tables
-            </button>
+            <button type="submit" class="sidebar-btn primary">Create Tables</button>
         </form>
-
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="populate_patient">
-            <button type="submit" class="sidebar-btn neutral">
-                Populate Tables
-            </button>
+            <button type="submit" class="sidebar-btn neutral">Populate Tables</button>
         </form>
-
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="run_queries">
-            <button type="submit" class="sidebar-btn query">
-                Run Queries
-            </button>
+            <button type="submit" class="sidebar-btn query">Run Queries</button>
         </form>
     </aside>
 
@@ -63,476 +82,288 @@
         $db_conn_str = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=oracle.scs.ryerson.ca)(Port=1521))(CONNECT_DATA=(SID=orcl)))';
         $conn = oci_connect($username, $password, $db_conn_str);
 
-        // ----------------- HELPERS -----------------
-
+        // --- HELPERS ---
         function runSQL($conn, $file) {
-            $sqlCode = file_get_contents($file);
-            $queries = explode(";", $sqlCode);
-
+            $queries = explode(";", file_get_contents($file));
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (empty($query)) continue;
-
                 $stid = oci_parse($conn, $query);
                 if (!oci_execute($stid)) {
-                    $error = oci_error($stid);
-                    echo "<p class='error'>Execution error: " . htmlentities($error['message']) . "</p>";
-                    continue;
+                    $e = oci_error($stid);
+                    echo "<p class='error'>" . htmlentities($e['message']) . "</p>";
                 }
             }
             oci_commit($conn);
         }
 
         function runSQLPopulate($conn, $file) {
-            $sqlCode = file_get_contents($file);
-            $queries = explode(";", $sqlCode);
-
+            $queries = explode(";", file_get_contents($file));
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (empty($query)) continue;
-
-                // convert 'YYYY-MM-DD' to TO_DATE(...) for Oracle
-                $query = preg_replace_callback(
-                    "/'(\d{4}-\d{2}-\d{2})'/",
-                    function ($matches) {
-                        return "TO_DATE('" . $matches[1] . "', 'YYYY-MM-DD')";
-                    },
-                    $query
-                );
-
+                $query = preg_replace_callback("/'(\d{4}-\d{2}-\d{2})'/", function ($m) { return "TO_DATE('" . $m[1] . "', 'YYYY-MM-DD')"; }, $query);
                 $stid = oci_parse($conn, $query);
                 if (!oci_execute($stid)) {
-                    $error = oci_error($stid);
-                    echo "<p class='error'>Execution error: " . htmlentities($error['message']) . "</p>";
-                    continue;
+                    $e = oci_error($stid);
+                    echo "<p class='error'>" . htmlentities($e['message']) . "</p>";
                 }
             }
             oci_commit($conn);
         }
 
-        // Run all SELECT queries from queries.sql and display each as a table
         function runQueries($conn, $file) {
-            $sqlCode = file_get_contents($file);
-            $queries = explode(";", $sqlCode);
-            $queryNumber = 1;
-
+            $queries = explode(";", file_get_contents($file));
+            $n = 1;
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (empty($query)) continue;
-
-                echo "<h2>Query {$queryNumber} Results</h2>";
-
+                echo "<h2>Query $n Results</h2>";
                 $stid = oci_parse($conn, $query);
-                if (!$stid) {
-                    $e = oci_error($conn);
-                    echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
-                    $queryNumber++;
-                    continue;
-                }
-
-                $r = oci_execute($stid);
-                if (!$r) {
-                    $e = oci_error($stid);
-                    echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    $queryNumber++;
-                    continue;
-                }
-
-                echo "<table><tr>";
-                $ncols = oci_num_fields($stid);
-                for ($i = 1; $i <= $ncols; $i++) {
-                    $colname = oci_field_name($stid, $i);
-                    echo "<th>" . htmlspecialchars($colname) . "</th>";
-                }
-                echo "</tr>";
-
-                while ($row = oci_fetch_array($stid, OCI_NUM + OCI_RETURN_NULLS)) {
-                    echo "<tr>";
-                    foreach ($row as $val) {
-                        echo "<td>" . htmlspecialchars($val) . "</td>";
-                    }
+                if (@oci_execute($stid)) {
+                    echo "<table><tr>";
+                    $ncols = oci_num_fields($stid);
+                    for ($i = 1; $i <= $ncols; $i++) echo "<th>" . htmlspecialchars(oci_field_name($stid, $i)) . "</th>";
                     echo "</tr>";
+                    while ($row = oci_fetch_array($stid, OCI_NUM + OCI_RETURN_NULLS)) {
+                        echo "<tr>";
+                        foreach ($row as $v) echo "<td>" . htmlspecialchars($v) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
                 }
-
-                echo "</table>";
-                $queryNumber++;
+                $n++;
             }
         }
 
-        // --------------- MAIN PAGE LOGIC ---------------
+        // --- HELPER TO RENDER MANAGEMENT FORMS ---
+        function renderManageBar($table, $pkName) {
+            return '
+            <div class="manage-bar">
+                <form class="manage-form" method="GET" action="manage_action.php">
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="table" value="'.$table.'">
+                    <label>Edit '.$pkName.':</label>
+                    <input type="number" name="id" required placeholder="ID...">
+                    <button type="submit" class="manage-btn btn-edit">Edit</button>
+                </form>
+                
+                <div style="border-left:1px solid #ccc; height:30px; margin:0 10px;"></div>
 
+                <form class="manage-form" method="POST" action="manage_action.php" onsubmit="return confirm(\'Permanently delete this ID?\');">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="table" value="'.$table.'">
+                    <label>Delete '.$pkName.':</label>
+                    <input type="number" name="id" required placeholder="ID...">
+                    <button type="submit" class="manage-btn btn-del">Delete</button>
+                </form>
+            </div>';
+        }
+        
+        // SPECIAL RENDER FOR MEDICATION INFO (Text PK)
+        function renderManageBarText($table, $pkName) {
+            return '
+            <div class="manage-bar">
+                <form class="manage-form" method="GET" action="manage_action.php">
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="table" value="'.$table.'">
+                    <label>Edit '.$pkName.':</label>
+                    <input type="text" name="id" required placeholder="Name...">
+                    <button type="submit" class="manage-btn btn-edit">Edit</button>
+                </form>
+                <div style="border-left:1px solid #ccc; height:30px; margin:0 10px;"></div>
+                <form class="manage-form" method="POST" action="manage_action.php" onsubmit="return confirm(\'Delete this record?\');">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="table" value="'.$table.'">
+                    <label>Delete '.$pkName.':</label>
+                    <input type="text" name="id" required placeholder="Name...">
+                    <button type="submit" class="manage-btn btn-del">Delete</button>
+                </form>
+            </div>';
+        }
+
+        // --- MAIN LOGIC ---
         if (!$conn) {
             $e = oci_error();
-            echo "<p class='error'>Database Connection Failed: " . htmlentities($e['message']) . "</p>";
+            echo "<p class='error'>Connection Failed: " . htmlentities($e['message']) . "</p>";
         } else {
-
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['table_action'])) {
-                $action = $_POST['table_action'];
-
-                if ($action === 'drop_patient') {
-                    runSQL($conn, 'drop.sql');
-
-                } elseif ($action === 'create_patient') {
-                    runSQL($conn, 'create.sql');
-
-                } elseif ($action === 'populate_patient') {
-                    runSQLPopulate($conn, 'populate.sql');
-
-                } elseif ($action === 'run_queries') {
-                    runQueries($conn, 'queries.sql');
-                    oci_close($conn);
-                    echo "</div></div></body></html>";
-                    exit;
-                }
+                $act = $_POST['table_action'];
+                if ($act === 'drop_patient') runSQL($conn, 'drop.sql');
+                elseif ($act === 'create_patient') runSQL($conn, 'create.sql');
+                elseif ($act === 'populate_patient') runSQLPopulate($conn, 'populate.sql');
+                elseif ($act === 'run_queries') { runQueries($conn, 'queries.sql'); oci_close($conn); echo "</div></div></body></html>"; exit; }
             }
 
-            echo "<p class='success'>Successfully connected to the Oracle database!</p>";
+            echo "<p class='success'>Connected to Oracle.</p>";
 
-            // ---------- PATIENT TABLE (READ ONLY) ----------
-            echo '<div class="table-header">
-                    <h2>Patient List</h2>
-                  </div>';
-
-            $sql = "SELECT * FROM Patient ORDER BY LastName";
-            $stid = oci_parse($conn, $sql);
-
-            if (!$stid) {
-                $e = oci_error($conn);
-                echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
-            } else {
-                $r = @oci_execute($stid);
-                if (!$r) {
-                    $e = oci_error($stid);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Patient table does not exist. Use 'Create Tables' in the sidebar.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
-                } else {
-                    echo "<table>";
+            // 1. PATIENT
+            echo '<div class="table-header"><h2>Patient List</h2></div>';
+            echo renderManageBar('Patient', 'OhipID');
+            
+            $stid = oci_parse($conn, "SELECT * FROM Patient ORDER BY LastName");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>OHIP ID</th><th>First Name</th><th>Last Name</th><th>DOB</th><th>Sex</th><th>Height</th><th>Weight</th><th>Email</th><th>Phone</th><th>Address</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                    $dob = $row['DATEOFBIRTH'] ? date('Y-m-d', strtotime($row['DATEOFBIRTH'])) : '';
                     echo "<tr>
-                            <th>OHIP ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>DOB</th>
-                            <th>Sex</th>
-                            <th>Height</th>
-                            <th>Weight</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                          </tr>";
-                    while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        $dob_formatted = date('Y-m-d', strtotime($row['DATEOFBIRTH']));
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
-                        echo "<td>" . $dob_formatted . "</td>";
-                        echo "<td>" . htmlspecialchars($row['SEX']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['HEIGHT']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['WEIGHT']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['FIRSTNAME'])."</td>
+                        <td>".htmlspecialchars($row['LASTNAME'])."</td>
+                        <td>".$dob."</td>
+                        <td>".htmlspecialchars($row['SEX'])."</td>
+                        <td>".htmlspecialchars($row['HEIGHT'])."</td>
+                        <td>".htmlspecialchars($row['WEIGHT'])."</td>
+                        <td>".htmlspecialchars($row['EMAIL'])."</td>
+                        <td>".htmlspecialchars($row['PHONE'])."</td>
+                        <td>".htmlspecialchars($row['ADDRESS'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- STAFF TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Staff List</h2>
-                  </div>';
+            // 2. STAFF
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Staff List</h2></div>';
+            echo renderManageBar('Staff', 'StaffID');
 
-            $sql_staff = "SELECT * FROM Staff ORDER BY LastName";
-            $stid_staff = oci_parse($conn, $sql_staff);
-            if ($stid_staff) {
-                $r2 = @oci_execute($stid_staff);
-                if ($r2) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM Staff ORDER BY LastName");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>Staff ID</th><th>First Name</th><th>Last Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Address</th><th>Status</th><th>Salary</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                     echo "<tr>
-                            <th>Staff ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Role</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Employment Status</th>
-                            <th>Salary</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_staff, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['EMAIL']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['PHONE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['ADDRESS']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['EMPLOYMENTSTATUS']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['SALARY']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_staff);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Staff table does not exist. Use 'Create Tables' in the sidebar.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['STAFFID'])."</td>
+                        <td>".htmlspecialchars($row['FIRSTNAME'])."</td>
+                        <td>".htmlspecialchars($row['LASTNAME'])."</td>
+                        <td>".htmlspecialchars($row['ROLE'])."</td>
+                        <td>".htmlspecialchars($row['EMAIL'])."</td>
+                        <td>".htmlspecialchars($row['PHONE'])."</td>
+                        <td>".htmlspecialchars($row['ADDRESS'])."</td>
+                        <td>".htmlspecialchars($row['EMPLOYMENTSTATUS'])."</td>
+                        <td>".htmlspecialchars($row['SALARY'])."</td>
+                    </tr>";
                 }
-            } else {
-                echo "<p class='error'>Unable to prepare Staff query.</p>";
+                echo "</table>";
             }
 
-            // ---------- PRESCRIPTION TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Prescriptions</h2>
-                  </div>';
+            // 3. PRESCRIPTION
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Prescriptions</h2></div>';
+            echo renderManageBar('Prescription', 'PrescriptionID');
 
-            $sql_rx = "SELECT * FROM Prescription ORDER BY PrescriptionID";
-            $stid_rx = oci_parse($conn, $sql_rx);
-            if ($stid_rx) {
-                $r_rx = @oci_execute($stid_rx);
-                if ($r_rx) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>ID</th><th>OHIP</th><th>Staff</th><th>Medication</th><th>Dose</th><th>Time</th><th>Date</th><th>Type</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                    $date = $row['DATEISSUED'] ? date('Y-m-d', strtotime($row['DATEISSUED'])) : '';
                     echo "<tr>
-                            <th>Prescription ID</th>
-                            <th>OHIP ID</th>
-                            <th>Staff ID</th>
-                            <th>Medication</th>
-                            <th>Dose</th>
-                            <th>Timeframe</th>
-                            <th>Date Issued</th>
-                            <th>Type</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_rx, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        $date_issued = $row['DATEISSUED'] ? date('Y-m-d', strtotime($row['DATEISSUED'])) : '';
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['PRESCRIPTIONID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['MEDICATION']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['DOSE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['TIMEFRAME']) . "</td>";
-                        echo "<td>" . $date_issued . "</td>";
-                        echo "<td>" . htmlspecialchars($row['MEDICATIONTYPE']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_rx);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Prescription table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['PRESCRIPTIONID'])."</td>
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['STAFFID'])."</td>
+                        <td>".htmlspecialchars($row['MEDICATION'])."</td>
+                        <td>".htmlspecialchars($row['DOSE'])."</td>
+                        <td>".htmlspecialchars($row['TIMEFRAME'])."</td>
+                        <td>".$date."</td>
+                        <td>".htmlspecialchars($row['MEDICATIONTYPE'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- MEDICATION INFO TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Medication Info</h2>
-                  </div>';
+            // 4. MEDICATION INFO (PK IS TEXT)
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Medication Info</h2></div>';
+            echo renderManageBarText('MedicationInfo', 'Medication Name');
 
-            $sql_med = "SELECT * FROM MedicationInfo ORDER BY Medication";
-            $stid_med = oci_parse($conn, $sql_med);
-            if ($stid_med) {
-                $r_med = @oci_execute($stid_med);
-                if ($r_med) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>Medication</th><th>Instructions</th><th>Side Effects</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                     echo "<tr>
-                            <th>Medication</th>
-                            <th>Instructions</th>
-                            <th>Side Effects</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_med, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['MEDICATION']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['INSTRUCTIONS']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['SIDEEFFECTS']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_med);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>MedicationInfo table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['MEDICATION'])."</td>
+                        <td>".htmlspecialchars($row['INSTRUCTIONS'])."</td>
+                        <td>".htmlspecialchars($row['SIDEEFFECTS'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- BILLING TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Billing Records</h2>
-                  </div>';
+            // 5. BILLING
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Billing Records</h2></div>';
+            echo renderManageBar('Billing', 'BillingID');
 
-            $sql_bill = "SELECT * FROM Billing ORDER BY BillingID";
-            $stid_bill = oci_parse($conn, $sql_bill);
-            if ($stid_bill) {
-                $r_bill = @oci_execute($stid_bill);
-                if ($r_bill) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM Billing ORDER BY BillingID");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>ID</th><th>OHIP</th><th>Cov</th><th>Service</th><th>Cost</th><th>Method</th><th>Date</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                    $date = $row['PAYMENTDATE'] ? date('Y-m-d', strtotime($row['PAYMENTDATE'])) : '';
                     echo "<tr>
-                            <th>Billing ID</th>
-                            <th>OHIP ID</th>
-                            <th>OHIP Coverage</th>
-                            <th>Service</th>
-                            <th>Cost</th>
-                            <th>Payment Method</th>
-                            <th>Payment Date</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_bill, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        $pay_date = $row['PAYMENTDATE'] ? date('Y-m-d', strtotime($row['PAYMENTDATE'])) : '';
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['BILLINGID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['OHIPCOVERAGE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['SERVICE']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['COST']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['PAYMENTMETHOD']) . "</td>";
-                        echo "<td>" . $pay_date . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_bill);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Billing table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['BILLINGID'])."</td>
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['OHIPCOVERAGE'])."</td>
+                        <td>".htmlspecialchars($row['SERVICE'])."</td>
+                        <td>".htmlspecialchars($row['COST'])."</td>
+                        <td>".htmlspecialchars($row['PAYMENTMETHOD'])."</td>
+                        <td>".$date."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- APPOINTMENT TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Appointments</h2>
-                  </div>';
+            // 6. APPOINTMENT
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Appointments</h2></div>';
+            echo renderManageBar('Appointment', 'ApptID');
 
-            $sql_appt = "SELECT * FROM Appointment ORDER BY AppointmentID";
-            $stid_appt = oci_parse($conn, $sql_appt);
-            if ($stid_appt) {
-                $r_appt = @oci_execute($stid_appt);
-                if ($r_appt) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>ID</th><th>OHIP</th><th>Staff</th><th>Time</th><th>Status</th><th>Reason</th><th>Result</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                    $date = $row['DATEANDTIME'] ? date('Y-m-d H:i', strtotime($row['DATEANDTIME'])) : '';
                     echo "<tr>
-                            <th>Appt ID</th>
-                            <th>OHIP ID</th>
-                            <th>Staff ID</th>
-                            <th>Date & Time</th>
-                            <th>Status</th>
-                            <th>Reason</th>
-                            <th>Result</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_appt, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        $dt = $row['DATEANDTIME'] ? date('Y-m-d H:i', strtotime($row['DATEANDTIME'])) : '';
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['APPOINTMENTID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
-                        echo "<td>" . $dt . "</td>";
-                        echo "<td>" . htmlspecialchars($row['STATUS']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['REASONFORVISIT']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['RESULT']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_appt);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Appointment table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['APPOINTMENTID'])."</td>
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['STAFFID'])."</td>
+                        <td>".$date."</td>
+                        <td>".htmlspecialchars($row['STATUS'])."</td>
+                        <td>".htmlspecialchars($row['REASONFORVISIT'])."</td>
+                        <td>".htmlspecialchars($row['RESULT'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- MEDICAL RECORD TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Medical Records</h2>
-                  </div>';
+            // 7. MEDICAL RECORD
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Medical Records</h2></div>';
+            echo renderManageBar('MedicalRecord', 'OHIP ID');
 
-            $sql_rec = "SELECT * FROM MedicalRecord ORDER BY OhipID";
-            $stid_rec = oci_parse($conn, $sql_rec);
-            if ($stid_rec) {
-                $r_rec = @oci_execute($stid_rec);
-                if ($r_rec) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>OHIP ID</th><th>Allergies</th><th>Procedures</th><th>Vaccines</th><th>Past Meds</th><th>Family Hx</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                     echo "<tr>
-                            <th>OHIP ID</th>
-                            <th>Allergies</th>
-                            <th>Procedures</th>
-                            <th>Vaccinations</th>
-                            <th>Past Meds</th>
-                            <th>Family History</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_rec, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['ALLERGIES']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['PROCEDURES']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['VACCINATIONS']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['PASTMEDICATION']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['FAMILYHISTORY']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_rec);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>MedicalRecord table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['ALLERGIES'])."</td>
+                        <td>".htmlspecialchars($row['PROCEDURES'])."</td>
+                        <td>".htmlspecialchars($row['VACCINATIONS'])."</td>
+                        <td>".htmlspecialchars($row['PASTMEDICATION'])."</td>
+                        <td>".htmlspecialchars($row['FAMILYHISTORY'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
-            // ---------- DIAGNOSES TABLE (READ ONLY) ----------
-            echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Diagnoses</h2>
-                  </div>';
+            // 8. DIAGNOSES
+            echo '<div class="table-header" style="margin-top:40px;"><h2>Diagnoses</h2></div>';
+            echo renderManageBar('Diagnoses', 'DiagnosisID');
 
-            $sql_diag = "SELECT * FROM Diagnoses ORDER BY DiagnosisID";
-            $stid_diag = oci_parse($conn, $sql_diag);
-            if ($stid_diag) {
-                $r_diag = @oci_execute($stid_diag);
-                if ($r_diag) {
-                    echo "<table>";
+            $stid = oci_parse($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
+            if (@oci_execute($stid)) {
+                echo "<table><tr><th>ID</th><th>OHIP</th><th>Diagnosis</th></tr>";
+                while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
                     echo "<tr>
-                            <th>Diagnosis ID</th>
-                            <th>OHIP ID</th>
-                            <th>Diagnosis</th>
-                          </tr>";
-
-                    while ($row = oci_fetch_array($stid_diag, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($row['DIAGNOSISID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['DIAGNOSIS']) . "</td>";
-                        echo "</tr>";
-                    }
-                    echo "</table>";
-                } else {
-                    $e = oci_error($stid_diag);
-                    if ($e && isset($e['code']) && $e['code'] == 942) {
-                        echo "<p class='warning'>Diagnoses table does not exist.</p>";
-                    } else {
-                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                    }
+                        <td>".htmlspecialchars($row['DIAGNOSISID'])."</td>
+                        <td>".htmlspecialchars($row['OHIPID'])."</td>
+                        <td>".htmlspecialchars($row['DIAGNOSIS'])."</td>
+                    </tr>";
                 }
+                echo "</table>";
             }
 
             oci_close($conn);
@@ -540,6 +371,5 @@
         ?>
     </div>
 </div>
-
 </body>
 </html>
