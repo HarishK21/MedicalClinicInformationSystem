@@ -61,11 +61,6 @@ header {
     white-space: nowrap;
 }
 
-.navbar a:hover {
-    background-color: rgba(255, 255, 255, 0.16);
-    transform: translateY(-1px);
-}
-
 .navbar a.active {
     background-color: #ffffff;
     color: var(--primary-dark);
@@ -112,10 +107,6 @@ tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-tr:hover {
-    background-color: #f1f1f1;
-}
-
 .error {
     color: #c62828;
     font-weight: bold;
@@ -144,10 +135,6 @@ tr:hover {
 
 .btn.delete {
     background-color: #c62828; 
-}
-
-.btn:hover {
-    opacity: 0.85;
 }
 
 .layout {
@@ -203,11 +190,6 @@ tr:hover {
 
 .sidebar-btn.danger {
     background-color: #c62828;
-}
-
-.sidebar-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
 }
 
 .layout .page-container {
@@ -289,7 +271,5 @@ tr:hover {
             color: white;
             font-size: 0.9rem;
         }
-        .btn-edit { background-color: #2196F3; } /* Blue */
-        .btn-del { background-color: #f44336; } /* Red */
-        .btn-edit:hover { background-color: #0b7dda; }
-        .btn-del:hover { background-color: #da190b; }
+        .btn-edit { background-color: #2196F3; }
+        .btn-del { background-color: #f44336; } 
