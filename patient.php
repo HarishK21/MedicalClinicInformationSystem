@@ -1,14 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Records</title>
+    <title>CPS510 Database - Patient List</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<?php include 'header.php'; ?>
+<header>
+    <div class="topbar">
+        <div class="brand">
+            <span class="brand-title">Medical Clinic Information System</span>
+        </div>
+
+        <nav class="navbar">
+            <a href="patient.php" class="active">Patients</a>
+            <a href="staff.php">Staff</a>
+            <a href="prescriptions.php">Prescriptions</a>
+            <a href="billing.php">Billing</a>
+            <a href="appointments.php">Appointments</a>
+            <a href="medical_records.php">Medical Records</a>
+        </nav>
+    </div>
+</header>
 
 <div class="layout">
 
@@ -100,9 +113,15 @@
             foreach ($queries as $query){
                 $query = trim($query);
                 if (empty($query)) continue;
-                $query = preg_replace_callback( "/'(\d{4}-\d{2}-\d{2})'/", function($matches) { return "TO_DATE('" . $matches[1] . "', 'YYYY-MM-DD')";}, $query);
+                $query = preg_replace_callback(
+                    "/'(\d{4}-\d{2}-\d{2})'/",
+                    function($matches) {
+                        return "TO_DATE('" . $matches[1] . "', 'YYYY-MM-DD')";
+                    },
+                    $query
+                );
 
-                $stid = oci_parse($conn, $query);
+            $stid = oci_parse($conn, $query);
                 if (!oci_execute($stid)) {
                     $error = oci_error($stid);
                     echo "Execution error: " . $error['message'] . "\n";
@@ -111,7 +130,6 @@
             }
             oci_commit($conn);
         }
-
 
         if (!$conn) {
             $e = oci_error();
@@ -125,16 +143,14 @@
                     $action = $_POST['table_action'];
 
                     if ($action === 'drop_patient') {
-    
-        runSQL($conn,'drop.sql');
+                        runSQL($conn, 'drop.sql');
 
-    } elseif ($action === 'create_patient') {
-        runSQL($conn, 'create.sql'); 
+                    } elseif ($action === 'create_patient') {
+                        runSQL($conn, 'create.sql'); 
 
-
-    } elseif ($action === 'populate_patient') {
-        runSQLPopulate($conn, 'populate.sql'); 
-    }
+                    } elseif ($action === 'populate_patient') {
+                        runSQLPopulate($conn, 'populate.sql'); 
+                    }
                 }
 
                 if (isset($_POST['record_action'])) {
