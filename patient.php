@@ -191,6 +191,13 @@
             </div>';
         }
 
+        function isTable($conn, $name) {
+            $sql = "SELECT COUNT(*) AS NUM FROM user_tables WHERE table_name = '" . strtoupper($name) . "'";
+            $stid = oci_parse($conn, $sql);
+            oci_execute($stid);
+            $row = oci_fetch_assoc($stid);
+            return ($row['NUM'] > 0);
+        }
         /* ---------- MAIN LOGIC ---------- */
 
             // Admin sidebar actions
@@ -222,44 +229,60 @@
             echo "<p class='success'>Connected to Oracle.</p>";
 
             // 1. PATIENT
-            echo '<div class="table-header"><h2>Patient List</h2></div>';
-            echo renderManageBar('Patient', 'OhipID');
-            renderTable($conn, "SELECT * FROM Patient ORDER BY LastName");
+            if (isTable($conn, 'PATIENT')) {
+                echo '<div class="table-header"><h2>Patient List</h2></div>';
+                echo renderManageBar('Patient', 'OhipID');
+                renderTable($conn, "SELECT * FROM Patient ORDER BY LastName");
+            }
 
             // 2. STAFF
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Staff List</h2></div>';
-            echo renderManageBar('Staff', 'StaffID');
-            renderTable($conn, "SELECT * FROM Staff ORDER BY LastName");
+            if (isTable($conn, 'STAFF')) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Staff List</h2></div>';
+                echo renderManageBar('Staff', 'StaffID');
+                renderTable($conn, "SELECT * FROM Staff ORDER BY LastName");
+            }
 
             // 3. PRESCRIPTION
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Prescriptions</h2></div>';
-            echo renderManageBar('Prescription', 'PrescriptionID');
-            renderTable($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
+            if (isTable($conn, "PRESCRIPTION")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Prescriptions</h2></div>';
+                echo renderManageBar('Prescription', 'PrescriptionID');
+                renderTable($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
+            }
 
             // 4. MEDICATION INFO
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Medication Info</h2></div>';
-            echo renderManageBarText('MedicationInfo', 'Medication Name');
-            renderTable($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
+            if (isTable($conn, "MEDICATIONINFO")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Medication Info</h2></div>';
+                echo renderManageBarText('MedicationInfo', 'Medication Name');
+                renderTable($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
+            }
 
             // 5. BILLING
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Billing Records</h2></div>';
-            echo renderManageBar('Billing', 'BillingID');
-            renderTable($conn, "SELECT * FROM Billing ORDER BY BillingID");
+            if (isTable($conn, "BILLING")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Billing Records</h2></div>';
+                echo renderManageBar('Billing', 'BillingID');
+                renderTable($conn, "SELECT * FROM Billing ORDER BY BillingID");
+            }
 
             // 6. APPOINTMENTS
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Appointments</h2></div>';
-            echo renderManageBar('Appointment', 'AppointmentID');
-            renderTable($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
+            if (isTable($conn, "APPOINTMENT")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Appointments</h2></div>';
+                echo renderManageBar('Appointment', 'AppointmentID');
+                renderTable($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
+            }
 
             // 7. MEDICAL RECORDS
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Medical Records</h2></div>';
-            echo renderManageBar('MedicalRecord', 'OHIPID');
-            renderTable($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
+            if (isTable($conn, "MEDICALRECORD")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Medical Records</h2></div>';
+                echo renderManageBar('MedicalRecord', 'OHIPID');
+                renderTable($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
+            }
 
             // 8. DIAGNOSES
-            echo '<div class="table-header" style="margin-top:40px;"><h2>Diagnoses</h2></div>';
-            echo renderManageBar('Diagnoses', 'DiagnosisID');
-            renderTable($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
+            if (isTable($conn, "DIAGNOSIS")) {
+                echo '<div class="table-header" style="margin-top:40px;"><h2>Diagnoses</h2></div>';
+                echo renderManageBar('Diagnoses', 'DiagnosisID');
+                renderTable($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
+            }
 
             oci_close($conn);
         
