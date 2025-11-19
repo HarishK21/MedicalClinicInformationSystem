@@ -59,6 +59,46 @@
             return null;
         }
 
+        function runSQL($conn, $file) {
+            $sqlCode = file_get_contents($file);
+
+            $queries = explode(";", $sqlCode);
+
+            foreach ($queries as $query){
+                $query = trim($query);
+                if (empty($query)) continue;
+
+                $stid = oci_parse($conn, $query);
+                if (!oci_execute($stid)) {
+                    $error = oci_error($stid);
+                    echo "Execution error: " . $error['message'] . "\n";
+                    continue;
+                }
+            }
+            oci_commit($conn);
+        }
+
+        function runSQLPopulate($conn, $file) {
+            $sqlCode = file_get_contents($file);
+
+            $queries = explode(";", $sqlCode);
+
+            foreach ($queries as $query){
+                $query = trim($query);
+                if (empty($query)) continue;
+                $query = preg_replace_callback( "/'(\d{4}-\d{2}-\d{2})'/", function($matches) { return "TO_DATE('" . $matches[1] . "', 'YYYY-MM-DD')";}, $query);
+
+                $stid = oci_parse($conn, $query);
+                if (!oci_execute($stid)) {
+                    $error = oci_error($stid);
+                    echo "Execution error: " . $error['message'] . "\n";
+                    continue;
+                }
+            }
+            oci_commit($conn);
+        }
+
+
         if (!$conn) {
             $e = oci_error();
             echo "<p class='error'>Database Connection Failed: " . htmlentities($e['message']) . "</p>";
@@ -70,83 +110,15 @@
                 if (isset($_POST['table_action'])) {
                     $action = $_POST['table_action'];
                     if ($action === 'drop_patient') {
-        $dropPatient = "BEGIN EXECUTE IMMEDIATE 'DROP TABLE Patient CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
-        $dropStaff   = "BEGIN EXECUTE IMMEDIATE 'DROP TABLE Staff CASCADE CONSTRAINTS'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;";
-
-        $err1 = runStatement($conn, $dropPatient);
-        $err2 = runStatement($conn, $dropStaff);
-
-        if ($err1 || $err2)
-            $adminMessage = "<p class='error'>Error dropping tables.</p>";
-        else
-            $adminMessage = "<p class='success'>Patient and Staff tables dropped.</p>";
+    
+        runSQL($conn,'drop.sql');
 
     } elseif ($action === 'create_patient') {
-        $createPatient = "CREATE TABLE Patient (
-            OhipID INT PRIMARY KEY,
-            FirstName VARCHAR(100) NOT NULL,
-            LastName VARCHAR(100) NOT NULL,
-            DateOfBirth DATE NOT NULL,
-            Sex VARCHAR(10) CHECK (Sex IN ('Male', 'Female')) NOT NULL,
-            Height INT CHECK (Height > 0),
-            Weight INT CHECK (Weight > 0),
-            Email VARCHAR(100),
-            Phone VARCHAR(14),
-            Address VARCHAR(100)
-        )";
+        runSQL($conn, 'create.sql'); 
 
-        $createStaff = "CREATE TABLE Staff (
-            StaffID INT PRIMARY KEY,
-            FirstName VARCHAR(100) NOT NULL,
-            LastName VARCHAR(100) NOT NULL,
-            Role VARCHAR(100) NOT NULL,
-            Email VARCHAR(100),
-            Phone VARCHAR(14),
-            Address VARCHAR(100),
-            EmploymentStatus VARCHAR(7) DEFAULT 'Active' CHECK (EmploymentStatus IN ('Absence', 'Active', 'Retired')),
-            Salary INT CHECK (Salary >= 0)
-        )";
-
-        $err1 = runStatement($conn, $createPatient);
-        $err2 = runStatement($conn, $createStaff);
-
-        if ($err1 || $err2)
-            $adminMessage = "<p class='error'>Error creating tables.</p>";
-        else
-            $adminMessage = "<p class='success'>Patient and Staff tables created (empty).</p>";
 
     } elseif ($action === 'populate_patient') {
-        $inserts = [
-            "INSERT INTO Patient VALUES (1001, 'Miladshan', 'Jeevakaran', DATE '2005-07-10', 'Male', 120, 35, 'mil.jev@gmail.com', '647-880-4910', '123 Main St')",
-            "INSERT INTO Patient VALUES (1002, 'Umair', 'Alam', DATE '2005-06-01', 'Male', 165, 60, 'umair.alam@gmail.com', '905-624-4591', '456 Niagara Ave')",
-            "INSERT INTO Patient VALUES (1003, 'Harish', 'Kiritharan', DATE '2005-08-21', 'Male', 175, 72, 'h.kiritha@gmail.com', '416-555-9999', '789 Pine Rd')",
-            "INSERT INTO Patient VALUES (1004, 'Bob', 'Singh', DATE '1992-03-12', 'Female', 170, 65, 'bobSingh89@gmail.com', '416-555-1212', '12 Elm St')",
-            "INSERT INTO Patient VALUES (1005, 'David', 'Wilson', DATE '1978-11-30', 'Male', 182, 90, 'david.wilson@gmail.com', '416-555-3434', '98 King St')",
-            "INSERT INTO Patient VALUES (1006, 'Bob', 'Singh', DATE '2001-07-08', 'Female', 160, 55, 'Bsingh11@gmail.com', '416-555-5656', '22 River Rd')",
-            "INSERT INTO Patient VALUES (1007, 'Akshar', 'Patel', DATE '1995-09-02', 'Male', 178, 77, 'akshar.patel@gmail.com', '416-555-7878', '45 Maple Ave')",
-            "INSERT INTO Patient VALUES (1008, 'David’', 'Wilson', DATE '2003-12-18', 'Female', 168, 62, 'david.wilson@gmail.com', '416-555-9090', '67 Birch Ln')",
-            
-            "INSERT INTO Staff VALUES (2001, 'Emily', 'Johnson', 'Doctor', 'emily.johnson@gmail.com', '416-555-2222', '12 Clinic Blvd', 'Active', 120000)",
-            "INSERT INTO Staff VALUES (2002, 'Michael', 'Brown', 'Nurse', 'michael.brown@gmail.com', '416-555-3333', '34 Wellness St', 'Active', 65000)",
-            "INSERT INTO Staff VALUES (2003, 'Sarah', 'Lee', 'Doctor', 'sarah.lee@gmail.com', '416-555-4444', '56 Health Dr', 'Retired', 150000)",
-            "INSERT INTO Staff VALUES (2004, 'James', 'Taylor', 'Doctor', 'james.taylor@gmail.com', '416-555-1111', '78 Clinic Rd', 'Active', 115000)",
-            "INSERT INTO Staff VALUES (2005, 'Anna', 'White', 'Nurse', 'anna.white@gmail.com', '416-555-2223', '90 Wellness Blvd', 'Active', 67000)",
-            "INSERT INTO Staff VALUES (2006, 'Robert', 'Green', 'Receptionist', 'robert.green@gmail.com', '416-555-3334', '33 Care St', 'Active', 55000)",
-            "INSERT INTO Staff VALUES (2007, 'Isabella', 'King', 'Medical Student', 'isabella.king@gmail.com', '416-555-4445', '44 Med Dr', 'Active', 145000)",
-        ];
-
-        $hadError = false;
-        foreach ($inserts as $sql) {
-            $err = runStatement($conn, $sql);
-            if ($err && strpos($err['message'], 'ORA-00001') === false) {
-                $adminMessage = "<p class='error'>Error populating tables: " . htmlentities($err['message']) . "</p>";
-                $hadError = true;
-                break;
-            }
-        }
-
-        if (!$hadError)
-            $adminMessage = "<p class='success'>Patient and Staff tables populated successfully (duplicates skipped).</p>";
+        runSQLPopulate($conn, 'populate.sql'); 
     }
                 }
 
