@@ -189,6 +189,10 @@
             echo "<p class='success'>Successfully connected to the Oracle database!</p>";
 
             // ---------- PATIENT TABLE (READ ONLY) ----------
+            echo '<div class="table-header">
+                    <h2>Patient List</h2>
+                  </div>';
+
             $sql = "SELECT * FROM Patient ORDER BY LastName";
             $stid = oci_parse($conn, $sql);
 
@@ -205,12 +209,6 @@
                         echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
                     }
                 } else {
-                     echo '<div class="table-header">
-                    <h2>Patient List</h2>
-                    <a href="add.php?table=patient" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>OHIP ID</th>
@@ -244,17 +242,15 @@
             }
 
             // ---------- STAFF TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Staff List</h2>
+                  </div>';
+
             $sql_staff = "SELECT * FROM Staff ORDER BY LastName";
             $stid_staff = oci_parse($conn, $sql_staff);
             if ($stid_staff) {
                 $r2 = @oci_execute($stid_staff);
                 if ($r2) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Staff List</h2>
-                    <a href="add.php?table=staff" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Staff ID</th>
@@ -295,17 +291,15 @@
             }
 
             // ---------- PRESCRIPTION TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Prescriptions</h2>
+                  </div>';
+
             $sql_rx = "SELECT * FROM Prescription ORDER BY PrescriptionID";
             $stid_rx = oci_parse($conn, $sql_rx);
             if ($stid_rx) {
                 $r_rx = @oci_execute($stid_rx);
                 if ($r_rx) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Prescriptions</h2>
-                    <a href="add.php?table=prescription" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Prescription ID</th>
@@ -343,17 +337,15 @@
             }
 
             // ---------- MEDICATION INFO TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Medication Info</h2>
+                  </div>';
+
             $sql_med = "SELECT * FROM MedicationInfo ORDER BY Medication";
             $stid_med = oci_parse($conn, $sql_med);
             if ($stid_med) {
                 $r_med = @oci_execute($stid_med);
                 if ($r_med) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Medication Info</h2>
-                    <a href="add.php?table=medicationinfo" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Medication</th>
@@ -380,17 +372,15 @@
             }
 
             // ---------- BILLING TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Billing Records</h2>
+                  </div>';
+
             $sql_bill = "SELECT * FROM Billing ORDER BY BillingID";
             $stid_bill = oci_parse($conn, $sql_bill);
             if ($stid_bill) {
                 $r_bill = @oci_execute($stid_bill);
                 if ($r_bill) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Billing Records</h2>
-                    <a href="add.php?table=billing" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Billing ID</th>
@@ -426,17 +416,15 @@
             }
 
             // ---------- APPOINTMENT TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Appointments</h2>
+                  </div>';
+
             $sql_appt = "SELECT * FROM Appointment ORDER BY AppointmentID";
             $stid_appt = oci_parse($conn, $sql_appt);
             if ($stid_appt) {
                 $r_appt = @oci_execute($stid_appt);
                 if ($r_appt) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Appointments</h2>
-                    <a href="add.php?table=appointment" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Appt ID</th>
@@ -472,18 +460,15 @@
             }
 
             // ---------- MEDICAL RECORD TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Medical Records</h2>
+                  </div>';
+
             $sql_rec = "SELECT * FROM MedicalRecord ORDER BY OhipID";
             $stid_rec = oci_parse($conn, $sql_rec);
             if ($stid_rec) {
                 $r_rec = @oci_execute($stid_rec);
                 if ($r_rec) {
-                    echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Medical Records</h2>
-                    <a href="add.php?table=medicalrecord" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
-
                     echo "<table>";
                     echo "<tr>
                             <th>OHIP ID</th>
@@ -516,17 +501,15 @@
             }
 
             // ---------- DIAGNOSES TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Diagnoses</h2>
+                  </div>';
+
             $sql_diag = "SELECT * FROM Diagnoses ORDER BY DiagnosisID";
             $stid_diag = oci_parse($conn, $sql_diag);
             if ($stid_diag) {
                 $r_diag = @oci_execute($stid_diag);
                 if ($r_diag) {
-                     echo '<div class="table-header" style="margin-top:40px;">
-                    <h2>Diagnoses</h2>
-                    <a href="add.php?table=diagnoses" class="sidebar-btn primary" style="width:auto;">
-                        Add Record
-                    </a>
-                    </div>';
                     echo "<table>";
                     echo "<tr>
                             <th>Diagnosis ID</th>
