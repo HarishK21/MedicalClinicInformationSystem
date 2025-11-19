@@ -28,14 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $sql = "DELETE FROM $table WHERE $pk = '$id'";
     
     $stid = oci_parse($conn, $sql);
-    if (oci_execute($stid)) {
-        oci_commit($conn);
-        header("Location: patient.php");
-    } else {
-        $e = oci_error($stid);
-        echo "Error: " . $e['message'];
-    }
+    oci_execute($stid);
+    oci_commit($conn);
+    header("Location: patient.php");
     exit;
+    
 }
 
 // ===============================================================
@@ -102,13 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     $stid = oci_parse($conn, $sql);
-    if (oci_execute($stid)) {
-        oci_commit($conn);
-        header("Location: patient.php");
-    } else {
-        $e = oci_error($stid);
-        echo "Error: " . $e['message'] . "<br>SQL: $sql";
-    }
+    oci_execute($stid);
+    oci_commit($conn);
+    header("Location: patient.php");
     exit;
 }
 
