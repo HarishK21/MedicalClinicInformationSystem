@@ -14,18 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $table = $_POST['table'];
     $id = $_POST['id'];
 
-    $pks = [
-        'Patient' => 'OhipID', 
-        'Staff' => 'StaffID', 
-        'Prescription' => 'PrescriptionID',
-        'MedicationInfo' => 'Medication', 
-        'Billing' => 'BillingID', 
-        'Appointment' => 'AppointmentID', 
-        'MedicalRecord' => 'OhipID', 
-        'Diagnoses' => 'DiagnosisID'
-    ];
+    // Set Primary Key based on Table Name (No arrays used)
+    $pk = "";
+    if ($table == 'Patient') { $pk = 'OhipID'; }
+    elseif ($table == 'Staff') { $pk = 'StaffID'; }
+    elseif ($table == 'Prescription') { $pk = 'PrescriptionID'; }
+    elseif ($table == 'MedicationInfo') { $pk = 'Medication'; }
+    elseif ($table == 'Billing') { $pk = 'BillingID'; }
+    elseif ($table == 'Appointment') { $pk = 'AppointmentID'; }
+    elseif ($table == 'MedicalRecord') { $pk = 'OhipID'; }
+    elseif ($table == 'Diagnoses') { $pk = 'DiagnosisID'; }
 
-    $sql = "DELETE FROM $table WHERE {$pks[$table]} = '$id'";
+    $sql = "DELETE FROM $table WHERE $pk = '$id'";
     
     $stid = oci_parse($conn, $sql);
     if (oci_execute($stid)) {
@@ -119,13 +119,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
     $table = $_GET['table'];
     $id = $_GET['id'];
     
-    $pks = [
-        'Patient' => 'OhipID', 'Staff' => 'StaffID', 'Prescription' => 'PrescriptionID',
-        'MedicationInfo' => 'Medication', 'Billing' => 'BillingID', 
-        'Appointment' => 'AppointmentID', 'MedicalRecord' => 'OhipID', 'Diagnoses' => 'DiagnosisID'
-    ];
+    // Set Primary Key based on Table Name (No arrays used)
+    $pk = "";
+    if ($table == 'Patient') { $pk = 'OhipID'; }
+    elseif ($table == 'Staff') { $pk = 'StaffID'; }
+    elseif ($table == 'Prescription') { $pk = 'PrescriptionID'; }
+    elseif ($table == 'MedicationInfo') { $pk = 'Medication'; }
+    elseif ($table == 'Billing') { $pk = 'BillingID'; }
+    elseif ($table == 'Appointment') { $pk = 'AppointmentID'; }
+    elseif ($table == 'MedicalRecord') { $pk = 'OhipID'; }
+    elseif ($table == 'Diagnoses') { $pk = 'DiagnosisID'; }
 
-    $sql = "SELECT * FROM $table WHERE {$pks[$table]} = '$id'";
+    $sql = "SELECT * FROM $table WHERE $pk = '$id'";
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC);
@@ -141,7 +146,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
     echo "<input type='hidden' name='id' value='$id'>";
 
     if ($table === 'Patient') {
-        // Simple Date Handling
         $dob = "";
         if ($row['DATEOFBIRTH'] != null) {
             $dob = date('Y-m-d', strtotime($row['DATEOFBIRTH']));
@@ -168,7 +172,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
         echo "Salary: <input type='number' name='salary' value='{$row['SALARY']}'><br>";
     }
     elseif ($table === 'Prescription') {
-        // Simple Date Handling
         $dt = "";
         if ($row['DATEISSUED'] != null) {
             $dt = date('Y-m-d', strtotime($row['DATEISSUED']));
@@ -187,7 +190,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
         echo "Side Effects: <input type='text' name='sideeffects' value='{$row['SIDEEFFECTS']}'><br>";
     }
     elseif ($table === 'Billing') {
-        // Simple Date Handling
         $dt = "";
         if ($row['PAYMENTDATE'] != null) {
             $dt = date('Y-m-d', strtotime($row['PAYMENTDATE']));
@@ -201,7 +203,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
         echo "Date: <input type='date' name='date' value='$dt'><br>";
     }
     elseif ($table === 'Appointment') {
-        // Simple Date Handling
         $dt = "";
         if ($row['DATEANDTIME'] != null) {
             $dt = date('Y-m-d\TH:i', strtotime($row['DATEANDTIME']));
