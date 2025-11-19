@@ -7,14 +7,12 @@ if (!$conn) {
     die("Database Connection Failed.");
 }
 
-// ===============================================================
-// 1. DELETE LOGIC
-// ===============================================================
+// Delete action    
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $table = $_POST['table'];
     $id = $_POST['id'];
 
-    // Set Primary Key based on Table Name (No arrays used)
+    // Setting the primary key based off the table name
     $pk = "";
     if ($table == 'Patient') { $pk = 'OhipID'; }
     elseif ($table == 'Staff') { $pk = 'StaffID'; }
@@ -25,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     elseif ($table == 'MedicalRecord') { $pk = 'OhipID'; }
     elseif ($table == 'Diagnoses') { $pk = 'DiagnosisID'; }
 
+    // Deleting the row in the table by it's corresponding primary key
     $sql = "DELETE FROM $table WHERE $pk = '$id'";
     
     $stid = oci_parse($conn, $sql);
@@ -35,14 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
 }
 
-// ===============================================================
-// 2. UPDATE LOGIC
-// ===============================================================
+// Update table
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
     $table = $_POST['table'];
     $id = $_POST['id'];
     $p = $_POST; 
 
+    // Creating and running the SQL update command based off which table the user wanted to edit with the updated information
     if ($table === 'Patient') {
         $sql = "UPDATE Patient SET 
                 FirstName='{$p['firstname']}', LastName='{$p['lastname']}', 
@@ -105,14 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// ===============================================================
-// 3. EDIT FORM LOGIC (FETCH DATA)
-// ===============================================================
+// Edit action
 if (isset($_GET['action']) && $_GET['action'] === 'edit') {
     $table = $_GET['table'];
     $id = $_GET['id'];
     
-    // Set Primary Key based on Table Name (No arrays used)
+    // Setting the primary key based off the table name
     $pk = "";
     if ($table == 'Patient') { $pk = 'OhipID'; }
     elseif ($table == 'Staff') { $pk = 'StaffID'; }
@@ -123,11 +119,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
     elseif ($table == 'MedicalRecord') { $pk = 'OhipID'; }
     elseif ($table == 'Diagnoses') { $pk = 'DiagnosisID'; }
 
+    // Fetch the table we want to edit based off the primary key
     $sql = "SELECT * FROM $table WHERE $pk = '$id'";
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC);
 
+    // If the user tries to edit a row by a primary key value that does not exist
     if (!$row) die("Record not found. <a href='patient.php'>Back</a>");
 
     echo '<link rel="stylesheet" href="styles.css">';
@@ -138,6 +136,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit') {
     echo "<input type='hidden' name='table' value='$table'>";
     echo "<input type='hidden' name='id' value='$id'>";
 
+    // Create the form based off which table the user wants to edit
     if ($table === 'Patient') {
         $dob = "";
         if ($row['DATEOFBIRTH'] != null) {
