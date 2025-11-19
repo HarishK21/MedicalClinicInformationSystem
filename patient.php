@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>CPS510 Database - Patient List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Records</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,11 +16,6 @@
 
         <nav class="navbar">
             <a href="patient.php" class="active">Patients</a>
-            <a href="staff.php">Staff</a>
-            <a href="prescriptions.php">Prescriptions</a>
-            <a href="billing.php">Billing</a>
-            <a href="appointments.php">Appointments</a>
-            <a href="medical_records.php">Medical Records</a>
         </nav>
     </div>
 </header>
@@ -31,7 +28,7 @@
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="drop_patient">
             <button type="submit" class="sidebar-btn danger"
-                onclick="return confirm('Are you sure you want to DROP the Patient table? This cannot be undone.');">
+                onclick="return confirm('Are you sure you want to DROP the tables? This cannot be undone.');">
                 Drop Tables
             </button>
         </form>
@@ -50,17 +47,10 @@
             </button>
         </form>
 
-        <form method="get" action="patient.php">
-            <input type="hidden" name="view" value="patient_fullnames">
+        <form method="post" action="patient.php">
+            <input type="hidden" name="table_action" value="run_queries">
             <button type="submit" class="sidebar-btn query">
-                Patient Full Names
-            </button>
-        </form>
-
-        <form method="get" action="patient.php">
-            <input type="hidden" name="view" value="staff_roles">
-            <button type="submit" class="sidebar-btn query">
-                Active Staff by Role
+                Run Queries
             </button>
         </form>
     </aside>
@@ -88,17 +78,16 @@
 
         function runSQL($conn, $file) {
             $sqlCode = file_get_contents($file);
-
             $queries = explode(";", $sqlCode);
 
-            foreach ($queries as $query){
+            foreach ($queries as $query) {
                 $query = trim($query);
                 if (empty($query)) continue;
 
                 $stid = oci_parse($conn, $query);
                 if (!oci_execute($stid)) {
                     $error = oci_error($stid);
-                    echo "Execution error: " . $error['message'] . "\n";
+                    echo "<p class='error'>Execution error: " . htmlentities($error['message']) . "</p>";
                     continue;
                 }
             }
@@ -107,28 +96,78 @@
 
         function runSQLPopulate($conn, $file) {
             $sqlCode = file_get_contents($file);
-
             $queries = explode(";", $sqlCode);
 
-            foreach ($queries as $query){
+            foreach ($queries as $query) {
                 $query = trim($query);
                 if (empty($query)) continue;
+
+                // convert 'YYYY-MM-DD' to TO_DATE(...) for Oracle
                 $query = preg_replace_callback(
                     "/'(\d{4}-\d{2}-\d{2})'/",
-                    function($matches) {
+                    function ($matches) {
                         return "TO_DATE('" . $matches[1] . "', 'YYYY-MM-DD')";
                     },
                     $query
                 );
 
-            $stid = oci_parse($conn, $query);
+                $stid = oci_parse($conn, $query);
                 if (!oci_execute($stid)) {
                     $error = oci_error($stid);
-                    echo "Execution error: " . $error['message'] . "\n";
+                    echo "<p class='error'>Execution error: " . htmlentities($error['message']) . "</p>";
                     continue;
                 }
             }
             oci_commit($conn);
+        }
+
+        // Run all SELECT queries from queries.sql and display each as a table
+        function runQueries($conn, $file) {
+            $sqlCode = file_get_contents($file);
+            $queries = explode(";", $sqlCode);
+            $queryNumber = 1;
+
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (empty($query)) continue;
+
+                echo "<h2>Query {$queryNumber} Results</h2>";
+
+                $stid = oci_parse($conn, $query);
+                if (!$stid) {
+                    $e = oci_error($conn);
+                    echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
+                    $queryNumber++;
+                    continue;
+                }
+
+                $r = oci_execute($stid);
+                if (!$r) {
+                    $e = oci_error($stid);
+                    echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    $queryNumber++;
+                    continue;
+                }
+
+                echo "<table><tr>";
+                $ncols = oci_num_fields($stid);
+                for ($i = 1; $i <= $ncols; $i++) {
+                    $colname = oci_field_name($stid, $i);
+                    echo "<th>" . htmlspecialchars($colname) . "</th>";
+                }
+                echo "</tr>";
+
+                while ($row = oci_fetch_array($stid, OCI_NUM + OCI_RETURN_NULLS)) {
+                    echo "<tr>";
+                    foreach ($row as $val) {
+                        echo "<td>" . htmlspecialchars($val) . "</td>";
+                    }
+                    echo "</tr>";
+                }
+
+                echo "</table>";
+                $queryNumber++;
+            }
         }
 
         if (!$conn) {
@@ -143,13 +182,20 @@
                     $action = $_POST['table_action'];
 
                     if ($action === 'drop_patient') {
+
                         runSQL($conn, 'drop.sql');
 
                     } elseif ($action === 'create_patient') {
-                        runSQL($conn, 'create.sql'); 
+
+                        runSQL($conn, 'create.sql');
 
                     } elseif ($action === 'populate_patient') {
-                        runSQLPopulate($conn, 'populate.sql'); 
+
+                        runSQLPopulate($conn, 'populate.sql');
+
+                    } elseif ($action === 'run_queries') {
+
+                        runQueries($conn, 'queries.sql');
                     }
                 }
 
@@ -276,79 +322,6 @@
                             </div>
                         </form>
                         <?php
-                    }
-                    break;
-
-                case 'patient_fullnames':
-                    echo "<h2>Patients Grouped by Full Name</h2>";
-
-                    $sql = "SELECT FirstName, LastName, COUNT(*) AS FullNames
-                            FROM Patient
-                            GROUP BY LastName, FirstName
-                            ORDER BY FullNames DESC, LastName, FirstName";
-                    $stid = oci_parse($conn, $sql);
-
-                    if (!$stid) {
-                        $e = oci_error($conn);
-                        echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
-                    } else {
-                        $r = oci_execute($stid);
-                        if (!$r) {
-                            $e = oci_error($stid);
-                            echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                        } else {
-                            echo "<table>";
-                            echo "<tr>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Number of Patients</th>
-                                  </tr>";
-
-                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                                echo "<tr>";
-                                echo "<td>" . htmlspecialchars($row['FIRSTNAME']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['LASTNAME']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['FULLNAMES']) . "</td>";
-                                echo "</tr>";
-                            }
-                            echo "</table>";
-                        }
-                    }
-                    break;
-
-                case 'staff_roles':
-                    echo "<h2>Active Staff Members by Role</h2>";
-
-                    $sql = "SELECT Role, COUNT(*) AS StaffCount
-                            FROM Staff
-                            WHERE EmploymentStatus = 'Active'
-                            GROUP BY Role
-                            ORDER BY StaffCount DESC";
-                    $stid = oci_parse($conn, $sql);
-
-                    if (!$stid) {
-                        $e = oci_error($conn);
-                        echo "<p class='error'>SQL Parsing Error: " . htmlentities($e['message']) . "</p>";
-                    } else {
-                        $r = oci_execute($stid);
-                        if (!$r) {
-                            $e = oci_error($stid);
-                            echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
-                        } else {
-                            echo "<table>";
-                            echo "<tr>
-                                    <th>Role</th>
-                                    <th>Active Staff Count</th>
-                                  </tr>";
-
-                            while ($row = oci_fetch_array($stid, OCI_ASSOC + OCI_RETURN_NULLS)) {
-                                echo "<tr>";
-                                echo "<td>" . htmlspecialchars($row['ROLE']) . "</td>";
-                                echo "<td>" . htmlspecialchars($row['STAFFCOUNT']) . "</td>";
-                                echo "</tr>";
-                            }
-                            echo "</table>";
-                        }
                     }
                     break;
 
