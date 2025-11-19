@@ -119,7 +119,7 @@
             }
         }
 
-        // Generic table renderer – this is the big simplifier
+        // Function to create table
         function renderTable($conn, $sql) {
             $stid = oci_parse($conn, $sql);
             oci_execute($stid);
@@ -141,7 +141,7 @@
             echo "</table>";
         }
 
-        // Manage bar (numeric PK)
+        // Create Edit & Delete Fields
         function renderManageBar($table, $pkName) {
             return '
             <div class="manage-bar">
@@ -149,7 +149,7 @@
                     <input type="hidden" name="action" value="edit">
                     <input type="hidden" name="table" value="'.$table.'">
                     <label>Edit '.$pkName.':</label>
-                    <input type="number" name="id" required placeholder="ID...">
+                    <input type="number" name="id">
                     <button type="submit" class="manage-btn btn-edit">Edit</button>
                 </form>
 
@@ -160,13 +160,13 @@
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="table" value="'.$table.'">
                     <label>Delete '.$pkName.':</label>
-                    <input type="number" name="id" required placeholder="ID...">
+                    <input type="number" name="id">
                     <button type="submit" class="manage-btn btn-del">Delete</button>
                 </form>
             </div>';
         }
 
-        // Manage bar (text PK – MedicationInfo)
+        // Medication Edit & Delete (No primary key)
         function renderManageBarText($table, $pkName) {
             return '
             <div class="manage-bar">
@@ -229,56 +229,56 @@
 
             echo "<p class='success'>Connected to Oracle.</p>";
 
-            // 1. PATIENT
+            // Patient Table
             if (isTable($conn, 'PATIENT')) {
                 echo '<div class="table-header"><h2>Patient List</h2></div>';
                 echo renderManageBar('Patient', 'OhipID');
                 renderTable($conn, "SELECT * FROM Patient ORDER BY LastName");
             }
 
-            // 2. STAFF
+            // Staff Table
             if (isTable($conn, 'STAFF')) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Staff List</h2></div>';
                 echo renderManageBar('Staff', 'StaffID');
                 renderTable($conn, "SELECT * FROM Staff ORDER BY LastName");
             }
 
-            // 3. PRESCRIPTION
+            // Prescription Table
             if (isTable($conn, "PRESCRIPTION")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Prescriptions</h2></div>';
                 echo renderManageBar('Prescription', 'PrescriptionID');
                 renderTable($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
             }
 
-            // 4. MEDICATION INFO
+            // Medication Table
             if (isTable($conn, "MEDICATIONINFO")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Medication Info</h2></div>';
                 echo renderManageBarText('MedicationInfo', 'Medication Name');
                 renderTable($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
             }
 
-            // 5. BILLING
+            // Billing Table
             if (isTable($conn, "BILLING")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Billing Records</h2></div>';
                 echo renderManageBar('Billing', 'BillingID');
                 renderTable($conn, "SELECT * FROM Billing ORDER BY BillingID");
             }
 
-            // 6. APPOINTMENTS
+            // Appointment Table
             if (isTable($conn, "APPOINTMENT")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Appointments</h2></div>';
                 echo renderManageBar('Appointment', 'AppointmentID');
                 renderTable($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
             }
 
-            // 7. MEDICAL RECORDS
+            // Medical Records Table
             if (isTable($conn, "MEDICALRECORD")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Medical Records</h2></div>';
                 echo renderManageBar('MedicalRecord', 'OHIPID');
                 renderTable($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
             }
 
-            // 8. DIAGNOSES
+            // Diagnosis Table
             if (isTable($conn, "DIAGNOSIS")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Diagnoses</h2></div>';
                 echo renderManageBar('Diagnoses', 'DiagnosisID');
