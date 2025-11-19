@@ -112,7 +112,7 @@
 
             echo $adminMessage;
 
-            // Render the correct form based on $table
+
             if ($table === 'patient') {
                 ?>
                 <h2>Add Patient Record</h2>

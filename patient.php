@@ -207,7 +207,6 @@
                 if (!$r) {
                     $e = oci_error($stid);
                     if ($e && isset($e['code']) && $e['code'] == 942) {
-                        // table does not exist
                         echo "<p class='warning'>Patient table does not exist. Use 'Create Tables' in the sidebar.</p>";
                     } else {
                         echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
@@ -295,6 +294,269 @@
                 }
             } else {
                 echo "<p class='error'>Unable to prepare Staff query.</p>";
+            }
+
+            // ---------- PRESCRIPTION TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Prescriptions</h2>
+                    <a href="add.php?table=prescription" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_rx = "SELECT * FROM Prescription ORDER BY PrescriptionID";
+            $stid_rx = oci_parse($conn, $sql_rx);
+            if ($stid_rx) {
+                $r_rx = @oci_execute($stid_rx);
+                if ($r_rx) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Prescription ID</th>
+                            <th>OHIP ID</th>
+                            <th>Staff ID</th>
+                            <th>Medication</th>
+                            <th>Dose</th>
+                            <th>Timeframe</th>
+                            <th>Date Issued</th>
+                            <th>Type</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_rx, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        $date_issued = $row['DATEISSUED'] ? date('Y-m-d', strtotime($row['DATEISSUED'])) : '';
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['PRESCRIPTIONID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['MEDICATION']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['DOSE']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['TIMEFRAME']) . "</td>";
+                        echo "<td>" . $date_issued . "</td>";
+                        echo "<td>" . htmlspecialchars($row['MEDICATIONTYPE']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_rx);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>Prescription table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
+            }
+
+            // ---------- MEDICATION INFO TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Medication Info</h2>
+                    <a href="add.php?table=medicationinfo" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_med = "SELECT * FROM MedicationInfo ORDER BY Medication";
+            $stid_med = oci_parse($conn, $sql_med);
+            if ($stid_med) {
+                $r_med = @oci_execute($stid_med);
+                if ($r_med) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Medication</th>
+                            <th>Instructions</th>
+                            <th>Side Effects</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_med, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['MEDICATION']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['INSTRUCTIONS']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['SIDEEFFECTS']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_med);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>MedicationInfo table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
+            }
+
+            // ---------- BILLING TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Billing Records</h2>
+                    <a href="add.php?table=billing" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_bill = "SELECT * FROM Billing ORDER BY BillingID";
+            $stid_bill = oci_parse($conn, $sql_bill);
+            if ($stid_bill) {
+                $r_bill = @oci_execute($stid_bill);
+                if ($r_bill) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Billing ID</th>
+                            <th>OHIP ID</th>
+                            <th>OHIP Coverage</th>
+                            <th>Service</th>
+                            <th>Cost</th>
+                            <th>Payment Method</th>
+                            <th>Payment Date</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_bill, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        $pay_date = $row['PAYMENTDATE'] ? date('Y-m-d', strtotime($row['PAYMENTDATE'])) : '';
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['BILLINGID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['OHIPCOVERAGE']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['SERVICE']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['COST']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['PAYMENTMETHOD']) . "</td>";
+                        echo "<td>" . $pay_date . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_bill);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>Billing table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
+            }
+
+            // ---------- APPOINTMENT TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Appointments</h2>
+                    <a href="add.php?table=appointment" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_appt = "SELECT * FROM Appointment ORDER BY AppointmentID";
+            $stid_appt = oci_parse($conn, $sql_appt);
+            if ($stid_appt) {
+                $r_appt = @oci_execute($stid_appt);
+                if ($r_appt) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Appt ID</th>
+                            <th>OHIP ID</th>
+                            <th>Staff ID</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                            <th>Result</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_appt, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        $dt = $row['DATEANDTIME'] ? date('Y-m-d H:i', strtotime($row['DATEANDTIME'])) : '';
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['APPOINTMENTID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['STAFFID']) . "</td>";
+                        echo "<td>" . $dt . "</td>";
+                        echo "<td>" . htmlspecialchars($row['STATUS']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['REASONFORVISIT']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['RESULT']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_appt);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>Appointment table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
+            }
+
+            // ---------- MEDICAL RECORD TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Medical Records</h2>
+                    <a href="add.php?table=medicalrecord" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_rec = "SELECT * FROM MedicalRecord ORDER BY OhipID";
+            $stid_rec = oci_parse($conn, $sql_rec);
+            if ($stid_rec) {
+                $r_rec = @oci_execute($stid_rec);
+                if ($r_rec) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>OHIP ID</th>
+                            <th>Allergies</th>
+                            <th>Procedures</th>
+                            <th>Vaccinations</th>
+                            <th>Past Meds</th>
+                            <th>Family History</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_rec, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['ALLERGIES']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['PROCEDURES']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['VACCINATIONS']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['PASTMEDICATION']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['FAMILYHISTORY']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_rec);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>MedicalRecord table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
+            }
+
+            // ---------- DIAGNOSES TABLE (READ ONLY) ----------
+            echo '<div class="table-header" style="margin-top:40px;">
+                    <h2>Diagnoses</h2>
+                    <a href="add.php?table=diagnoses" class="sidebar-btn primary" style="width:auto;">
+                        Add Record
+                    </a>
+                  </div>';
+
+            $sql_diag = "SELECT * FROM Diagnoses ORDER BY DiagnosisID";
+            $stid_diag = oci_parse($conn, $sql_diag);
+            if ($stid_diag) {
+                $r_diag = @oci_execute($stid_diag);
+                if ($r_diag) {
+                    echo "<table>";
+                    echo "<tr>
+                            <th>Diagnosis ID</th>
+                            <th>OHIP ID</th>
+                            <th>Diagnosis</th>
+                          </tr>";
+
+                    while ($row = oci_fetch_array($stid_diag, OCI_ASSOC + OCI_RETURN_NULLS)) {
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['DIAGNOSISID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['OHIPID']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['DIAGNOSIS']) . "</td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    $e = oci_error($stid_diag);
+                    if ($e && isset($e['code']) && $e['code'] == 942) {
+                        echo "<p class='warning'>Diagnoses table does not exist.</p>";
+                    } else {
+                        echo "<p class='error'>SQL Execution Error: " . htmlentities($e['message']) . "</p>";
+                    }
+                }
             }
 
             oci_close($conn);
