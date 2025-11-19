@@ -199,20 +199,19 @@
 
         /* ---------- MAIN LOGIC ---------- */
 
-        if (!$conn) {
-            $e = oci_error();
-            echo "<p class='error'>Connection Failed: " . htmlentities($e['message']) . "</p>";
-        } else {
-
             // Admin sidebar actions
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['table_action'])) {
+            if (isset($_POST['table_action'])) {
+
                 $act = $_POST['table_action'];
                 if ($act === 'drop_patient') {
                     runSQL($conn, 'drop.sql');
+
                 } elseif ($act === 'create_patient') {
                     runSQL($conn, 'create.sql');
+
                 } elseif ($act === 'populate_patient') {
                     runSQLPopulate($conn, 'populate.sql');
+
                 } elseif ($act === 'run_queries') {
                     runQueries($conn, 'queries.sql');
                     oci_close($conn);
@@ -220,6 +219,7 @@
                     exit;
                 }
             }
+
 
             echo "<p class='success'>Connected to Oracle.</p>";
 
@@ -264,7 +264,7 @@
             renderTable($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
 
             oci_close($conn);
-        }
+        
         ?>
     </div>
 </div>
