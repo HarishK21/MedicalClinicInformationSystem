@@ -5,44 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Records</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Styling for the new ID-based management forms */
-        .manage-bar {
-            background-color: #f1f1f1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            border: 1px solid #ddd;
-        }
-        .manage-form {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .manage-form label { font-weight: bold; font-size: 0.9rem; }
-        .manage-form input[type="text"], 
-        .manage-form input[type="number"] {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 120px;
-        }
-        .manage-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-            font-size: 0.9rem;
-        }
-        .btn-edit { background-color: #2196F3; } /* Blue */
-        .btn-del { background-color: #f44336; } /* Red */
-        .btn-edit:hover { background-color: #0b7dda; }
-        .btn-del:hover { background-color: #da190b; }
-    </style>
+   
 </head>
 <body>
 
