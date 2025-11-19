@@ -21,7 +21,7 @@
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="drop_patient">
             <button type="submit" class="sidebar-btn danger"
-                    onclick="return confirm('Are you sure? This cannot be undone.');">
+                    onclick="return confirm('Are you sure?');">
                 Drop Tables
             </button>
         </form>
@@ -39,6 +39,10 @@
         <form method="post" action="patient.php">
             <input type="hidden" name="table_action" value="run_queries">
             <button type="submit" class="sidebar-btn query">Run Queries</button>
+        </form>
+        <form method="post" action="TBD">
+            <input type="hidden" name="table_action" value="exit">
+            <button type="submit" class="sidebar-btn danger">Exit</button>
         </form>
     </aside>
 
@@ -60,10 +64,7 @@
                 $q = trim($q);
                 if ($q === "") continue;
                 $stid = oci_parse($conn, $q);
-                if (!oci_execute($stid)) {
-                    $e = oci_error($stid);
-                    echo "<p class='error'>" . htmlentities($e['message']) . "</p>";
-                }
+                oci_execute($stid);
             }
             oci_commit($conn);
         }
@@ -83,10 +84,7 @@
                     $q
                 );
                 $stid = oci_parse($conn, $q);
-                if (!oci_execute($stid)) {
-                    $e = oci_error($stid);
-                    echo "<p class='error'>" . htmlentities($e['message']) . "</p>";
-                }
+                oci_execute($stid);
             }
             oci_commit($conn);
         }
@@ -124,11 +122,7 @@
         // Generic table renderer – this is the big simplifier
         function renderTable($conn, $sql) {
             $stid = oci_parse($conn, $sql);
-            if (!oci_execute($stid)) {
-                $e = oci_error($stid);
-                echo "<p class='error'>" . htmlentities($e['message']) . "</p>";
-                return;
-            }
+            oci_execute($stid);
 
             echo "<table><tr>";
             $cols = oci_num_fields($stid);
