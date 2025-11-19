@@ -120,7 +120,7 @@
         }
 
         // Function to create table
-        function renderTable($conn, $sql) {
+        function createTable($conn, $sql) {
             $stid = oci_parse($conn, $sql);
             oci_execute($stid);
 
@@ -142,7 +142,7 @@
         }
 
         // Create Edit & Delete Fields
-        function renderManageBar($table, $pkName) {
+        function createActionForm($table, $pkName) {
             return '
             <div class="manage-bar">
                 <form class="manage-form" method="GET" action="manage_action.php">
@@ -167,7 +167,7 @@
         }
 
         // Medication Edit & Delete (No primary key)
-        function renderManageBarText($table, $pkName) {
+        function createActionFormMed($table, $pkName) {
             return '
             <div class="manage-bar">
                 <form class="manage-form" method="GET" action="manage_action.php">
@@ -216,7 +216,6 @@
 
                 } elseif ($act === 'run_queries') {
                     runQueries($conn, 'queries.sql');
-                    oci_close($conn);
                     echo "</div></div></body></html>";
                     exit;
                 } elseif ($act === 'exit') {
@@ -232,60 +231,58 @@
             // Patient Table
             if (isTable($conn, 'PATIENT')) {
                 echo '<div class="table-header"><h2>Patient List</h2></div>';
-                echo renderManageBar('Patient', 'OhipID');
-                renderTable($conn, "SELECT * FROM Patient ORDER BY LastName");
+                echo createActionForm('Patient', 'OhipID');
+                createTable($conn, "SELECT * FROM Patient ORDER BY LastName");
             }
 
             // Staff Table
             if (isTable($conn, 'STAFF')) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Staff List</h2></div>';
-                echo renderManageBar('Staff', 'StaffID');
-                renderTable($conn, "SELECT * FROM Staff ORDER BY LastName");
+                echo createActionForm('Staff', 'StaffID');
+                createTable($conn, "SELECT * FROM Staff ORDER BY LastName");
             }
 
             // Prescription Table
             if (isTable($conn, "PRESCRIPTION")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Prescriptions</h2></div>';
-                echo renderManageBar('Prescription', 'PrescriptionID');
-                renderTable($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
+                echo createActionForm('Prescription', 'PrescriptionID');
+                createTable($conn, "SELECT * FROM Prescription ORDER BY PrescriptionID");
             }
 
             // Medication Table
             if (isTable($conn, "MEDICATIONINFO")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Medication Info</h2></div>';
-                echo renderManageBarText('MedicationInfo', 'Medication Name');
-                renderTable($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
+                echo createActionFormMed('MedicationInfo', 'Medication Name');
+                createTable($conn, "SELECT * FROM MedicationInfo ORDER BY Medication");
             }
 
             // Billing Table
             if (isTable($conn, "BILLING")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Billing Records</h2></div>';
-                echo renderManageBar('Billing', 'BillingID');
-                renderTable($conn, "SELECT * FROM Billing ORDER BY BillingID");
+                echo createActionForm('Billing', 'BillingID');
+                createTable($conn, "SELECT * FROM Billing ORDER BY BillingID");
             }
 
             // Appointment Table
             if (isTable($conn, "APPOINTMENT")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Appointments</h2></div>';
-                echo renderManageBar('Appointment', 'AppointmentID');
-                renderTable($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
+                echo createActionForm('Appointment', 'AppointmentID');
+                createTable($conn, "SELECT * FROM Appointment ORDER BY AppointmentID");
             }
 
             // Medical Records Table
             if (isTable($conn, "MEDICALRECORD")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Medical Records</h2></div>';
-                echo renderManageBar('MedicalRecord', 'OHIPID');
-                renderTable($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
+                echo createActionForm('MedicalRecord', 'OHIPID');
+                createTable($conn, "SELECT * FROM MedicalRecord ORDER BY OhipID");
             }
 
             // Diagnosis Table
             if (isTable($conn, "DIAGNOSIS")) {
                 echo '<div class="table-header" style="margin-top:40px;"><h2>Diagnoses</h2></div>';
-                echo renderManageBar('Diagnoses', 'DiagnosisID');
-                renderTable($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
+                echo createActionForm('Diagnoses', 'DiagnosisID');
+                createTable($conn, "SELECT * FROM Diagnoses ORDER BY DiagnosisID");
             }
-
-            oci_close($conn);
         
         ?>
     </div>
