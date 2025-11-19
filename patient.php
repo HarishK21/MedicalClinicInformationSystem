@@ -191,6 +191,7 @@
             </div>';
         }
 
+        // Check is table exists
         function isTable($conn, $name) {
             $sql = "SELECT COUNT(*) AS NUM FROM user_tables WHERE table_name = '" . strtoupper($name) . "'";
             $stid = oci_parse($conn, $sql);
